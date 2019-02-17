@@ -1,10 +1,12 @@
 server <- function(input, output, session) { 
-  
+
+####DATA INPUT AND EXPLORATION####
   survey_data_reactive <-
     reactive({
       
       if(!is.null(input$file1)) {
-        survey_data <- input$file1  
+        dataFile <- input$file1
+        survey_data <- read.csv(dataFile$datapath)
       } else{
         survey_data <- survey_data_default
       }
@@ -17,6 +19,8 @@ server <- function(input, output, session) {
     DT::datatable(data = survey_data_reactive(),
                   options = list(scrollX = T))
   })
+  
+
   
   output$survey_rows <- renderValueBox({
     
@@ -39,7 +43,168 @@ server <- function(input, output, session) {
     )
   
   })
+
+####AUTO SEGMENTATION####
+  round_mean = function(x){
+    return(round(mean(x),2))
+  }
+  round_sd = function(x){
+    return(round(sd(x),2))
+  }
   
+  create_data = function(cluster_data){
+    
+    orignames <- colnames(cluster_data)
+    
+    mean_block <- ddply(cluster_data, .(cluster), numcolwise(round_mean))
+    mean_block[,1] <- c(seq(1,length(mean_block[,1])*2-1,by=2))
+    #datatable((mean_block))
+    
+    sd_block <- ddply(cluster_data, .(cluster), numcolwise(round_sd))
+    sd_block[,1] <- c(seq(2,length(sd_block[,1])*2,by=2))
+    #datatable(sd_block)
+    
+    stack_data <- rbind(mean_block,sd_block)
+    stack_data <- stack_data[order(stack_data$cluster),]
+    #datatable(stack_data)
+    
+    output_data <- transpose(stack_data)
+    output_data <- output_data[2:length(output_data[,1]),]
+    
+    #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
+    output_data$Questions <- orignames[1:nrow(output_data)]
+    return_data <- output_data %>% select(Questions, everything())
+    colnames(return_data)[2:length(colnames(return_data))] <- rep(c("Mean","SD"),ncol(return_data)/2)
+    return(as.data.frame(return_data))
+  }
+  
+  
+  output_table = function(tablex,NumSeg,cluster_block){
+    
+
+    #CREATING TABLES
+    #constructing the straight forward tables
+    seglabel = c(seq(1,NumSeg))
+    segdf = data.frame(matrix(nrow = NumSeg,ncol=nrow(tablex)),row.names=seglabel)
+    colnames(segdf) = colnames(row.names(tablex))
+    seg_meana <- ddply(cluster_block, .(cluster), numcolwise(round_mean))
+    seg_meana = seg_meana[,2:length(seg_meana)]
+    seg_sda <- ddply(cluster_block, .(cluster), numcolwise(round_sd))
+    seg_sda = seg_sda[,2:length(seg_sda)]
+    
+    orignames <- colnames(cluster_block)
+    
+    #constructing the inverse tables
+    seg_meani <- transpose(data.frame(sapply(seglabel, FUN = function(x) sapply(cluster_block[cluster_block$cluster != x,1:ncol(cluster_block)-1], function(y) mean(y,na.rm=TRUE)))))
+    
+    #no idea what i'm doing with this subsetting but whatever of orignames
+    colnames(seg_meani) <- orignames[1:ncol(seg_meani)]
+    seg_sdi <- transpose(data.frame(sapply(seglabel, FUN = function(x) sapply(cluster_block[cluster_block$cluster != x,1:ncol(cluster_block)-1], function(y) sd(y,na.rm=TRUE)))))
+    colnames(seg_sdi) <- orignames[1:ncol(seg_sdi)]
+    
+    #constructing the table of differences
+    segdiffs <- transpose((seg_meana-seg_meani)/seg_sdi)
+    
+    
+    #COLOR CODING
+    #including defining the significance cutoffs for color coding
+    color_vector <- c("rgb(222,124,124)","rgb(219,23,23)","rgb(255,255,255)","rgb(218,252,229)","rgb(56,166,93)")
+    first_sd_vector <- c(-4,-1,-0.5,0.5,1)
+    sec_sd_vector <- c(-1,-0.5,0.5,1,4)
+    #Color function creator
+    colordic = function(colors, less, greater, ref){
+      return(colors[greater>ref & less<=ref])
+    }
+    
+    #Creating color coding dataframe based on difference tables
+    colorcode <- sapply(seglabel,FUN = function(y) sapply(segdiffs[,y],FUN = function(x) colordic(color_vector,first_sd_vector,sec_sd_vector,x)))
+    
+    #creating formatted container
+    sketch = htmltools::withTags(table(
+      class = 'display',
+      thead(
+        tr(
+          th(rowspan = 2, 'Segments'),
+          lapply(c(seq(1:NumSeg)),th,colspan=2)
+        ),
+        tr(
+          lapply(rep(c('Mean', 'SD'),NumSeg),th)
+        )
+      )
+    ))
+    
+    
+    
+    #outputting data in the formatted table
+    return(datatable(tablex, container = sketch, rownames = FALSE)%>% formatStyle(columns = c(seq(2,NumSeg*2,by=2)),target="cell", backgroundColor = styleEqual(as.matrix(tablex[,c(seq(2,NumSeg*2,by=2))]),colorcode)))
+  }
+  
+  framex <- eventReactive(input$UseTheseVars,{
+   
+    #create strings of the important inputs
+    SegNames <- c(input$segvar1,input$segvar2,input$segvar3,input$segvar4)
+    SegVarTypes <- c(input$segvar1_type,input$segvar2_type,input$segvar3_type,input$segvar4_type)
+    SegVarPurp <- c(input$segvar1_purp,input$segvar2_purp,input$segvar3_purp,input$segvar4_purp)
+    
+    Name_Count <- sum(SegNames!="")
+    Unique_Name_Count <- length(unique(SegNames[SegNames!=""]))
+    CatCount <- sum(SegVarTypes =='categorical')
+    NumerCount <- sum(SegVarTypes == 'numerical')
+
+    #returning error if selected multiple of the same variable
+    if(Name_Count != Unique_Name_Count) {
+    return(data.table("error, please check your inputs!"))
+    } else {
+      
+      if(NumerCount == Name_Count){
+        data_1 <- as.data.frame(survey_data_reactive())
+        data_2 <- na.omit(data_1[,colnames(data_1) %in% SegNames])
+        data_3 <- scale(data_2)
+        #??how to handle these nas instead of removing?
+        data_3[is.na(data_3)] <- 0
+        k_analysis <- kmeans(data_3,input$segment_num)
+        #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
+        data_2$cluster <- as.factor(c(k_analysis$cluster,1,1))[1:nrow(data_2)]
+      } else{
+          
+          if(CatCount == Name_Count){
+            data_1 <- as.data.frame(survey_data_reactive())
+            data_2 <- scale(na.omit(data_1[,colnames(data_1) %in% SegNames]))
+            data_3 <- scale(data_2)
+            #??how to handle these nas instead of removing?
+            data_3[is.na(data_3)] <- 0
+            k_analysis <- kmodes(data_3,input$segment_num)
+            #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
+            data_2$cluster <- as.factor(c(k_analysis$cluster,1,1))[1:nrow(data_2)]    
+          } else{
+            
+            data_1 <- as.data.frame(survey_data_reactive())
+            data_2 <- scale(na.omit(data_1[,colnames(data_1) %in% SegNames]))
+            data_3 <- scale(data_2)
+            #??how to handle these nas instead of removing?
+            data_3[is.na(data_3)] <- 0
+            k_analysis <- kproto(data_3,input$segment_num)
+            #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
+            data_2$cluster <- as.factor(c(k_analysis$cluster,1,1))[1:nrow(data_2)]
+          }
+        
+        }
+      
+    }
+    
+    #running the aggregation function on the data_1 that we just created
+    orignames <- colnames(data_2)
+    tablex <- create_data(data_2)
+    returntable <- output_table(tablex,input$segment_num,data_2)
+    return(returntable)
+    
+   
+  })
+ 
+  output$segtable <- renderDataTable({framex()
+    })
+  
+####JONS FILTERING CODE####
   ### segment 1 choice filtering ###
   
   observe({
@@ -254,7 +419,7 @@ server <- function(input, output, session) {
     
   })
   
-  ####Adding Quality Data Stuff###
+####DATA QUALITY CHECK####
   Tablefx = function (QualData){
     
     builder <- as.data.frame(apply(QualData[,2:ncol(QualData)],MARGIN = 2, FUN = function (x) length(unique(x))))
