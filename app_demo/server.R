@@ -52,10 +52,39 @@ server <- function(input, output, session) {
     return(round(sd(x),2))
   }
   
-  create_data = function(cluster_data){
+   ##THIS FUNCTION CREATES THE SUMMARY DATA##
+   create_data = function(cluster_data){
     
     orignames <- colnames(cluster_data)
     
+    #separating the factor data from numerical
+    typelist <- lapply(cluster_data,class)
+    numer_block <- cluster_data[,typelist=='numerical' | colnames(cluster_data) == 'cluster']
+    colnames(numer_block) <- colnames(cluster_data)[typelist=='numerical' | colnames(cluster_data) == 'cluster']
+    
+    cat_block <- cluster_data[,typelist=='factor'| colnames(cluster_data) == 'cluster']
+    colnames(cat_block) <- colnames(cluster_data)[typelist=='factor' | colnames(cluster_data) == 'cluster']
+
+    #analysis for categorical data#
+    if(length(colnames(cat_block))>1){
+      ###START HERE FOR EDITS ON THIS CAT TABLE OUTPUT###
+      categorical_table = function(datacube){
+        cluster_list <- unique(datacube$cluster)
+        
+        #assumes 'cluster' is final column in datacube
+        question_list <- colnames(datacube)[-length(colnames(datacube))]
+        
+        output_frame = as.data.frame(matrix(0,nrow=))
+        
+        for(i in question_list){
+          
+        }
+        
+      }
+      
+    }
+    
+    #analysis for numerical data#
     mean_block <- ddply(cluster_data, .(cluster), numcolwise(round_mean))
     mean_block[,1] <- c(seq(1,length(mean_block[,1])*2-1,by=2))
     #datatable((mean_block))
@@ -66,22 +95,21 @@ server <- function(input, output, session) {
     
     stack_data <- rbind(mean_block,sd_block)
     stack_data <- stack_data[order(stack_data$cluster),]
-    #datatable(stack_data)
     
     output_data <- transpose(stack_data)
     output_data <- output_data[2:length(output_data[,1]),]
     
     #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
     output_data$Questions <- orignames[1:nrow(output_data)]
-    return_data <- output_data %>% select(Questions, everything())
+    # return_data <- output_data %>% select(Questions, everything())
+    return_data <- output_data[,c(ncol(output_data),1:(ncol(output_data)-1))]
     colnames(return_data)[2:length(colnames(return_data))] <- rep(c("Mean","SD"),ncol(return_data)/2)
     return(as.data.frame(return_data))
   }
   
-  
+  ##THIS FUCNTION IS PRETTY MUCH JUST TO GET THE COLOR CODING##
   output_table = function(tablex,NumSeg,cluster_block){
-    
-
+   
     #CREATING TABLES
     #constructing the straight forward tables
     seglabel = c(seq(1,NumSeg))
@@ -94,10 +122,10 @@ server <- function(input, output, session) {
     
     orignames <- colnames(cluster_block)
     
-    #constructing the inverse tables
+    #constructing the inverse tables (mean or sd of the data for data NOT EQUAL to the cluster of choice)
     seg_meani <- transpose(data.frame(sapply(seglabel, FUN = function(x) sapply(cluster_block[cluster_block$cluster != x,1:ncol(cluster_block)-1], function(y) mean(y,na.rm=TRUE)))))
     
-    #no idea what i'm doing with this subsetting but whatever of orignames
+    #no idea what i'm doing with this subsetting of orignames and why it is needed but whatever
     colnames(seg_meani) <- orignames[1:ncol(seg_meani)]
     seg_sdi <- transpose(data.frame(sapply(seglabel, FUN = function(x) sapply(cluster_block[cluster_block$cluster != x,1:ncol(cluster_block)-1], function(y) sd(y,na.rm=TRUE)))))
     colnames(seg_sdi) <- orignames[1:ncol(seg_sdi)]
@@ -145,6 +173,8 @@ server <- function(input, output, session) {
     SegNames <- c(input$segvar1,input$segvar2,input$segvar3,input$segvar4)
     SegVarTypes <- c(input$segvar1_type,input$segvar2_type,input$segvar3_type,input$segvar4_type)
     SegVarPurp <- c(input$segvar1_purp,input$segvar2_purp,input$segvar3_purp,input$segvar4_purp)
+    CatNames <- SegNames[SegVarTypes == 'categorical']
+    NumNames <- SegNames[SegVarTypes == 'numerical']
     
     Name_Count <- sum(SegNames!="")
     Unique_Name_Count <- length(unique(SegNames[SegNames!=""]))
@@ -169,8 +199,9 @@ server <- function(input, output, session) {
           
           if(CatCount == Name_Count){
             data_1 <- as.data.frame(survey_data_reactive())
-            data_2 <- scale(na.omit(data_1[,colnames(data_1) %in% SegNames]))
-            data_3 <- scale(data_2)
+            #changing values to factors
+            data_2 <- sapply(na.omit(data_1[,colnames(data_1) %in% CatNames]),factor)
+            data_3 <- as.data.frame(data_2)
             #??how to handle these nas instead of removing?
             data_3[is.na(data_3)] <- 0
             k_analysis <- kmodes(data_3,input$segment_num)
@@ -179,8 +210,22 @@ server <- function(input, output, session) {
           } else{
             
             data_1 <- as.data.frame(survey_data_reactive())
-            data_2 <- scale(na.omit(data_1[,colnames(data_1) %in% SegNames]))
-            data_3 <- scale(data_2)
+            data_2 <- na.omit(data_1[,colnames(data_1) %in% SegNames])
+            ###ACCOUNTING FOR USING LAPPLY ON A SINGLE ITEM LIST###
+            if(length(CatNames)>1){
+            data_2[,colnames(data_2) %in% CatNames] <- lapply(data_2[,colnames(data_2) %in% CatNames],as.factor)
+            } else {
+              data_2[,colnames(data_2) %in% CatNames] <- as.factor(data_2[,colnames(data_2) %in% CatNames])
+            }
+            ###ALSO ENSURING NUMERIC VARIABLES ARE CLASS NUMERIC###
+            if(length(NumNames)>1){
+              data_2[,colnames(data_2) %in% NumNames] <- lapply(data_2[,colnames(data_2) %in% NumNames],as.numeric)
+            } else {
+              data_2[,colnames(data_2) %in% NumNames] <- as.numeric(data_2[,colnames(data_2) %in% NumNames])
+            }
+            
+            data_3 <- data_2
+           
             #??how to handle these nas instead of removing?
             data_3[is.na(data_3)] <- 0
             k_analysis <- kproto(data_3,input$segment_num)
@@ -195,6 +240,7 @@ server <- function(input, output, session) {
     #running the aggregation function on the data_1 that we just created
     orignames <- colnames(data_2)
     tablex <- create_data(data_2)
+    print(tablex[1:10,1:3])
     returntable <- output_table(tablex,input$segment_num,data_2)
     return(returntable)
     
