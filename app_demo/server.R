@@ -89,9 +89,6 @@ server <- function(input, output, session) {
       
       orignames <- colnames(cluster_data)
       
-      print("checking wtf")
-      print(cluster_data[1:10,])
-      
       numer_block <- cluster_data[,Types == 'numeric' | colnames(cluster_data) == 'cluster']
 
       if(sum(Types =='numeric')>0){
@@ -103,8 +100,6 @@ server <- function(input, output, session) {
         numer_block <- NULL
       }
       
-      print("HERE TOO")
-      print(numer_block[1:10,])
       
       cat_block <- cluster_data[,Types == 'categorical' | colnames(cluster_data) == 'cluster']
      
@@ -170,15 +165,9 @@ server <- function(input, output, session) {
       if(length(colnames(numer_block))>1){
         #analysis for numeric data#
         
-        print("before analysis")
-        print(head(numer_block))
-        
         mean_block <- ddply(numer_block, .(cluster), numcolwise(round_mean))
         sd_block <- ddply(numer_block, .(cluster), numcolwise(round_sd))
         stack_data <- rbind(mean_block,sd_block)
-        
-        print("first analysis")
-        print(head(numer_block))
         
         stack_data <- stack_data[order(stack_data$cluster),]
         output_data <- transpose(stack_data)
@@ -218,13 +207,11 @@ server <- function(input, output, session) {
                 output_frame = categorical_table(cat_block)
                 output_frame$type = "categorical"
                 return_data$type = "numeric"
-                print("cat frame")
-                print(output_frame)
-                print("num frame")
-                print(return_data)
                 compiled_data <- rbind(return_data,output_frame)
                
-      }
+              }
+      print("checking for scale")
+      print(compiled_data)
       return(as.data.frame(compiled_data))
     }
     ###END CREATE DATA###
@@ -277,7 +264,6 @@ server <- function(input, output, session) {
         ##?? HERE not working to calculate segdiffs
        
         segdiffs[segdiffs == Inf | segdiffs == -Inf | segdiffs == NaN] = 0
-        # print(segdiffs)
         ##?? HERE - COME BACK TO CORRECT THIS CHI SQUARE and make the color coding meaningful###
         
         #To format as percent
@@ -349,13 +335,10 @@ server <- function(input, output, session) {
         obs_val = obs_val[,-ncol(obs_val)]
         
         expected_val <- sapply(1:nrow(obs_val), FUN = function(y) sapply(1:ncol(obs_val), FUN = function(x) mean(as.numeric(obs_val[x,-y]))))
-        print(expected_val)
-        print(obs_val)
         segdiffs_cat <- (obs_val - expected_val)/expected_val
         colnames(segdiffs_cat) <- c("seg1", "seg2")
 
         segdiffs_cat[segdiffs_cat == Inf | segdiffs_cat == -Inf | segdiffs_cat == NaN] = 0
-        # print(segdiffs)
         ##?? HERE - COME BACK TO CORRECT THIS CHI SQUARE and make the color coding meaningful###
         
         #To format as percent
@@ -458,9 +441,6 @@ server <- function(input, output, session) {
                   
                   data_1 <- as.data.frame(survey_data_reactive())
                   data_2 <- na.omit(data_1[,colnames(data_1) %in% SegNames])
-                  print("important")
-                  print(SegNames)
-                  print(colnames(data_2))
                   data_2 <- data_2[,SegNames]
                   
                   ###ACCOUNTING FOR USING LAPPLY ON A SINGLE ITEM LIST###
@@ -478,31 +458,100 @@ server <- function(input, output, session) {
                   }
                  
                   data_3 <- data_2
-                 print(data_3)
-                  #??how to handle these nas instead of removing?
-                  # data_3[is.na(data_3)] <- 0
-
+                  data_3[,SegVarTypes=='numeric'] <- scale(data_3[,SegVarTypes=='numeric'])
                   k_analysis <- kproto(data_3,input$segment_num)
-                  #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
-                  
                   data_2$cluster <- as.factor(k_analysis$cluster)
           }
-        
         }
       
     }
     
-    #running the aggregation function on the data_1 that we just created
+  ####OUTPUTTING QUALITY SCORE####
+    output$QualityScore <- renderValueBox({
+      tablex <- create_data(data_2, SegVarTypes)
+      
+      dif_table <- c(1:nrow(tablex))
+      counter = 1
+      for(i in 1:nrow(tablex)){
+        #for numerics
+        if(tablex[i,ncol(tablex)] == "numeric"){
+        #finding the overall sd and means
+        mean_whole = mean(data_2[,tablex[i,1]])
+        sd_whole = sd(data_2[,tablex[i,1]])
+        
+        t_table <- transpose(tablex[,seq(3,ncol(tablex)-1,by=2)])
+        sd_segs = sd(t_table[,i])
+        dif_table[i] <- sd_segs/(sd_whole/3)
+        i=i+1
+        }
+        else{
+          t_table <- transpose(tablex[,seq(3,ncol(tablex)-1,by=2)])
+          sd_segs = sd(t_table[,i])
+          dif_table[i] <- sd_segs/(0.7/3)
+          i=i+1
+        }
+      }
+      
+      QS = sum(dif_table)/length(dif_table)
+      
+    if(QS>2){
+      valueBox(
+        value = formatC("Highly Different"),
+        subtitle = "Significance of Your Segments"
+      )}
+      else if (QS<0.5){
+        valueBox(
+          value = formatC("Not Very Different"),
+          subtitle = "Significance of Your Segments"
+        )
+      } else{
+        valueBox(
+          value = formatC("Fairly Different"),
+          subtitle = "Significance of Your Segments"
+        )
+      }
+      
+    })
+    
+    
+    
+  #RUNNING THE FUNCTIONS AND OUPUTTING OUR DESIRED TABLE
     orignames <- colnames(data_2)
     tablex <- create_data(data_2, SegVarTypes)
     returntable <- output_table(tablex,input$segment_num,data_2)
+    
+  #TRYING TO CREATE DOWNLOAD ABILITY - DOES NOT WORK#
+    # output$down <- downloadHandler(
+    #   #Specify the filename
+    #   filename = function() {
+    #     "yoursegements.png"
+    #   },
+    #   content = function(file){
+    #     #open device
+    #     png(file)
+    #     returntable        
+    #     dev.off()
+    #     #create the plot
+    #     #close the device
+    #   }
+    # )
+    
+    
     return(returntable)
+    
     
    
   })
  
+  
   output$segtable <- renderDataTable({framex()
     })
+  
+  
+  
+####QUALITY SCORE####
+  
+  
   
 ####JONS FILTERING CODE####
   ### segment 1 choice filtering ###

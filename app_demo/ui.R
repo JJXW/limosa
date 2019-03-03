@@ -103,8 +103,12 @@ body <- dashboardBody(
               column(2,actionButton("UseTheseVars", "Choose These Variables & Run Segmentation"))
               )
     ),
+    fluidRow(
+      valueBoxOutput("QualityScore")
+    ),
     fluidRow((dataTableOutput("segtable"))
-    )
+    ),
+    fluidRow(downloadButton(outputId = "down", label = "Download Analysis"))
     ),
             
            
