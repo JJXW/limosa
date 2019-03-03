@@ -52,140 +52,344 @@ server <- function(input, output, session) {
     return(round(sd(x),2))
   }
   
-   ##THIS FUNCTION CREATES THE SUMMARY DATA##
-   create_data = function(cluster_data){
-    
-    orignames <- colnames(cluster_data)
-    
-    #separating the factor data from numerical
-    typelist <- lapply(cluster_data,class)
-    numer_block <- cluster_data[,typelist=='numerical' | colnames(cluster_data) == 'cluster']
-    colnames(numer_block) <- colnames(cluster_data)[typelist=='numerical' | colnames(cluster_data) == 'cluster']
-    
-    cat_block <- cluster_data[,typelist=='factor'| colnames(cluster_data) == 'cluster']
-    colnames(cat_block) <- colnames(cluster_data)[typelist=='factor' | colnames(cluster_data) == 'cluster']
-
-    #analysis for categorical data#
-    if(length(colnames(cat_block))>1){
-      ###START HERE FOR EDITS ON THIS CAT TABLE OUTPUT###
-      categorical_table = function(datacube){
-        cluster_list <- unique(datacube$cluster)
-        
-        #assumes 'cluster' is final column in datacube
-        question_list <- colnames(datacube)[-length(colnames(datacube))]
-        
-        output_frame = as.data.frame(matrix(0,nrow=))
-        
-        for(i in question_list){
-          
-        }
-        
-      }
-      
-    }
-    
-    #analysis for numerical data#
-    mean_block <- ddply(cluster_data, .(cluster), numcolwise(round_mean))
-    mean_block[,1] <- c(seq(1,length(mean_block[,1])*2-1,by=2))
-    #datatable((mean_block))
-    
-    sd_block <- ddply(cluster_data, .(cluster), numcolwise(round_sd))
-    sd_block[,1] <- c(seq(2,length(sd_block[,1])*2,by=2))
-    #datatable(sd_block)
-    
-    stack_data <- rbind(mean_block,sd_block)
-    stack_data <- stack_data[order(stack_data$cluster),]
-    
-    output_data <- transpose(stack_data)
-    output_data <- output_data[2:length(output_data[,1]),]
-    
-    #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
-    output_data$Questions <- orignames[1:nrow(output_data)]
-    # return_data <- output_data %>% select(Questions, everything())
-    return_data <- output_data[,c(ncol(output_data),1:(ncol(output_data)-1))]
-    colnames(return_data)[2:length(colnames(return_data))] <- rep(c("Mean","SD"),ncol(return_data)/2)
-    return(as.data.frame(return_data))
-  }
-  
-  ##THIS FUCNTION IS PRETTY MUCH JUST TO GET THE COLOR CODING##
-  output_table = function(tablex,NumSeg,cluster_block){
-   
-    #CREATING TABLES
-    #constructing the straight forward tables
-    seglabel = c(seq(1,NumSeg))
-    segdf = data.frame(matrix(nrow = NumSeg,ncol=nrow(tablex)),row.names=seglabel)
-    colnames(segdf) = colnames(row.names(tablex))
-    seg_meana <- ddply(cluster_block, .(cluster), numcolwise(round_mean))
-    seg_meana = seg_meana[,2:length(seg_meana)]
-    seg_sda <- ddply(cluster_block, .(cluster), numcolwise(round_sd))
-    seg_sda = seg_sda[,2:length(seg_sda)]
-    
-    orignames <- colnames(cluster_block)
-    
-    #constructing the inverse tables (mean or sd of the data for data NOT EQUAL to the cluster of choice)
-    seg_meani <- transpose(data.frame(sapply(seglabel, FUN = function(x) sapply(cluster_block[cluster_block$cluster != x,1:ncol(cluster_block)-1], function(y) mean(y,na.rm=TRUE)))))
-    
-    #no idea what i'm doing with this subsetting of orignames and why it is needed but whatever
-    colnames(seg_meani) <- orignames[1:ncol(seg_meani)]
-    seg_sdi <- transpose(data.frame(sapply(seglabel, FUN = function(x) sapply(cluster_block[cluster_block$cluster != x,1:ncol(cluster_block)-1], function(y) sd(y,na.rm=TRUE)))))
-    colnames(seg_sdi) <- orignames[1:ncol(seg_sdi)]
-    
-    #constructing the table of differences
-    segdiffs <- transpose((seg_meana-seg_meani)/seg_sdi)
-    
-    
-    #COLOR CODING
-    #including defining the significance cutoffs for color coding
-    color_vector <- c("rgb(222,124,124)","rgb(219,23,23)","rgb(255,255,255)","rgb(218,252,229)","rgb(56,166,93)")
-    first_sd_vector <- c(-4,-1,-0.5,0.5,1)
-    sec_sd_vector <- c(-1,-0.5,0.5,1,4)
-    #Color function creator
-    colordic = function(colors, less, greater, ref){
-      return(colors[greater>ref & less<=ref])
-    }
-    
-    #Creating color coding dataframe based on difference tables
-    colorcode <- sapply(seglabel,FUN = function(y) sapply(segdiffs[,y],FUN = function(x) colordic(color_vector,first_sd_vector,sec_sd_vector,x)))
-    
-    #creating formatted container
-    sketch = htmltools::withTags(table(
-      class = 'display',
-      thead(
-        tr(
-          th(rowspan = 2, 'Segments'),
-          lapply(c(seq(1:NumSeg)),th,colspan=2)
-        ),
-        tr(
-          lapply(rep(c('Mean', 'SD'),NumSeg),th)
-        )
-      )
-    ))
-    
-    
-    
-    #outputting data in the formatted table
-    return(datatable(tablex, container = sketch, rownames = FALSE)%>% formatStyle(columns = c(seq(2,NumSeg*2,by=2)),target="cell", backgroundColor = styleEqual(as.matrix(tablex[,c(seq(2,NumSeg*2,by=2))]),colorcode)))
-  }
-  
+ 
+###EVERYTHING IS NESTED WITHIN THIS LARGER REACTIVE FUNCTION###
   framex <- eventReactive(input$UseTheseVars,{
    
     #create strings of the important inputs
     SegNames <- c(input$segvar1,input$segvar2,input$segvar3,input$segvar4)
     SegVarTypes <- c(input$segvar1_type,input$segvar2_type,input$segvar3_type,input$segvar4_type)
+    SegVarTypes <- SegVarTypes[SegVarTypes != ""]
     SegVarPurp <- c(input$segvar1_purp,input$segvar2_purp,input$segvar3_purp,input$segvar4_purp)
     CatNames <- SegNames[SegVarTypes == 'categorical']
-    NumNames <- SegNames[SegVarTypes == 'numerical']
+    NumNames <- SegNames[SegVarTypes == 'numeric']
     
     Name_Count <- sum(SegNames!="")
     Unique_Name_Count <- length(unique(SegNames[SegNames!=""]))
     CatCount <- sum(SegVarTypes =='categorical')
-    NumerCount <- sum(SegVarTypes == 'numerical')
+    NumerCount <- sum(SegVarTypes == 'numeric')
 
+    ##THIS FUNCTION CREATES THE DATA TO BE PASSED TO COLOR CODING##
+    create_data = function(cluster_data,Types){
+      
+      orignames <- colnames(cluster_data)
+      
+      numer_block <- cluster_data[,Types == 'numeric' | colnames(cluster_data) == 'cluster']
+
+      if(sum(Types =='numeric')>0){
+        numer_block <- as.data.frame(apply(numer_block, MARGIN =2, FUN = as.numeric))
+        colnames(numer_block) = colnames(cluster_data)[Types =='numeric' | colnames(cluster_data) == 'cluster']
+        
+      } else{
+        #no numerics to create
+        numer_block <- NULL
+      }
+      
+      cat_block <- cluster_data[,Types == 'categorical' | colnames(cluster_data) == 'cluster']
+      if(sum(Types=='categorical')>0){
+        cat_block <- as.data.frame(sapply(colnames(cat_block), FUN = function(x) as.factor(cat_block[,x])))
+        colnames(cat_block) = colnames(cluster_data)[Types =='categorical' | colnames(cluster_data) == 'cluster']
+      } else{
+        cat_block <- as.factor(cat_block)
+      }
+
+      
+   ##START HERE - OUTPUT FRAME IS NOT BEING UPDATED##
+      #analysis for CATEGORICAL data#
+      if(CatCount > 0){
+        ###START HERE FOR EDITS ON THIS CAT TABLE OUTPUT###
+        categorical_table = function(datacube){
+          cluster_list <- unique(datacube$cluster)
+          cluster_count <- length(cluster_list)
+          
+          #list of categorical questions but without the "cluster" column
+          # colnames(cat_block) <- colnames(cluster_data)[Types=='factor' | colnames(cluster_data) == 'cluster']
+          question_list <- colnames(cat_block)[-match('cluster',colnames(cat_block))]
+          
+          #function to create the number of rows needed
+          rowcount = function(x) {
+            return(length(unique(x)))
+          }
+          
+          rows_of_catframe = sum(unlist(lapply(as.data.frame(cat_block),rowcount)))
+         
+          output_frame = as.data.frame(matrix(0,nrow=rows_of_catframe,ncol=cluster_count*2+2))
+          colnames(output_frame) = c('Question','Answer',rep(c('Mean','SD'),cluster_count))
+
+          #loop to place values correctly in a table getting ready for output
+          #runs for every unique answer choice of every categorical question
+          rowq = 1
+          for(q in question_list){
+            for(u in (unique(datacube[,q]))){
+              colq = 3
+              for (c in cluster_list) {
+                output_frame[rowq,1] = q
+                output_frame[rowq,2] = u
+                output_frame[rowq,colq] = sum(datacube[,q]==u & datacube$cluster==c)/sum(datacube$cluster==c)
+                colq = colq + 2
+              }
+              rowq = rowq+1
+            }
+            
+          }
+          #here ends the categorical table function
+
+          return(output_frame)
+        }
+      } else {
+        #ADD CASE#
+      }
+      #here ends the if length of col names of cat block >1 ... need to add the 1 case)
+      #}
+      
+      #??May have to edit this numerical analysis block to only operate on numerical columns#
+      if(length(colnames(numer_block))>1){
+        #analysis for numeric data#
+        
+        mean_block <- ddply(numer_block, .(cluster), numcolwise(round_mean))
+        sd_block <- ddply(numer_block, .(cluster), numcolwise(round_sd))
+        stack_data <- rbind(mean_block,sd_block)
+        stack_data <- stack_data[order(stack_data$cluster),]
+        output_data <- transpose(stack_data)
+        output_data <- output_data[-1,]
+        
+        #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
+        output_data$Question <- orignames[-length(orignames)][SegVarTypes == 'numeric']
+        output_data$Answer <- 0
+        # return_data <- output_data %>% select(Question, everything())
+        return_data <- output_data[,c(((ncol(output_data)-1):ncol(output_data)),1:(ncol(output_data)-2))]
+        colnames(return_data)[3:length(colnames(return_data))] <- rep(c("Mean","SD"),(ncol(return_data)-2)/2)
+      }else{
+        #add case for only one numberical to output return data
+      }
+      
+      #RETURNING THE RIGHT DATA ACROSS CAT AND NUM CATEGORIES
+      
+      #ONLY CATEGORICAL CASE
+      if(CatCount == Name_Count){
+          if(CatCount>1){
+            output_frame = categorical_table(cluster_data)
+            compiled_data = output_frame
+          }
+          else { 
+            #may not need this clause, but i think there is something in categorical_table() that will need to be changed for single case
+            #need to think through what will happen if there will be one vector
+          }
+      }
+      #ONLY NUMERIC CASE
+          else if(NumerCount == Name_Count){
+            compiled_data = return_data
+      } 
+      
+      #CATEGORICAL + NUMERIC CASE
+              else{
+                output_frame = categorical_table(cat_block)
+                output_frame$type = "categorical"
+                return_data$type = "numeric"
+                compiled_data <- rbind(return_data,output_frame)
+               
+      }
+      return(as.data.frame(compiled_data))
+    }
+    ###END CREATE DATA###
+    
+    
+    ###BEGIN COLOR CODING FUNCTION###
+    output_table = function(tablex,NumSeg,cluster_block){
+      
+      #CREATING TABLES
+      #constructing the straight forward tables
+      #IF NUMERICAL ALONE
+      seglabel = c(seq(1,NumSeg))
+        ##NUMERIC PART##
+       if(NumerCount == Name_Count){
+          segdf = data.frame(matrix(nrow = NumSeg,ncol=nrow(tablex)),row.names=seglabel)
+          #changed colnames from being row.names
+          colnames(segdf) = tablex[,1]
+          seg_meana <- ddply(cluster_block, .(cluster), numcolwise(round_mean))
+          
+          seg_meana = seg_meana[,2:length(seg_meana)]
+          seg_sda <- ddply(cluster_block, .(cluster), numcolwise(round_sd))
+          seg_sda = seg_sda[,2:length(seg_sda)]
+          
+          orignames <- colnames(cluster_block)
+          
+          #constructing the inverse tables (mean or sd of the data for data NOT EQUAL to the cluster of choice)
+          seg_meani <- transpose(data.frame(sapply(seglabel, FUN = function(x) sapply(cluster_block[cluster_block$cluster != x,1:ncol(cluster_block)-1], function(y) mean(y,na.rm=TRUE)))))
+          
+          #no idea what i'm doing with this subsetting of orignames and why it is needed but whatever
+          colnames(seg_meani) <- orignames[1:ncol(seg_meani)]
+          seg_sdi <- transpose(data.frame(sapply(seglabel, FUN = function(x) sapply(cluster_block[cluster_block$cluster != x,1:ncol(cluster_block)-1], function(y) sd(y,na.rm=TRUE)))))
+          colnames(seg_sdi) <- orignames[1:ncol(seg_sdi)]
+          
+          #constructing the table of differences
+          if(seg_sdi>0){
+            segdiffs <- transpose((seg_meana - seg_meani) / seg_sdi)
+          } else{
+            segdiffs <- transpose(seg_meana - seg_meani)
+          }
+       }      
+      ##CATEGORICAL PART##
+      else if(CatCount==Name_Count){
+        tablexcol = seq(3,ncol(tablex),by=2)
+        obs_val = tablex[,tablexcol]
+      
+        
+        expected_val <- sapply(1:nrow(obs_val), FUN = function(y) sapply(1:ncol(obs_val), FUN = function(x) mean(as.numeric(obs_val[x,-y]))))
+        segdiffs <- (obs_val - expected_val)/expected_val
+        ##?? HERE not working to calculate segdiffs
+       
+        segdiffs[segdiffs == Inf | segdiffs == -Inf | segdiffs == NaN] = 0
+        # print(segdiffs)
+        ##?? HERE - COME BACK TO CORRECT THIS CHI SQUARE and make the color coding meaningful###
+        
+        #To format as percent
+        percent <- function(x, digits = 2, format = "f", ...) {
+          paste0(formatC(100 * x, format = format, digits = digits, ...), "%")
+        }
+        tablex[,3:ncol(tablex)] = apply(tablex[,3:ncol(tablex)],MARGIN = c(1,2),FUN = percent)
+        tablex[,seq(4,ncol(tablex),by=2)]=""
+      }
+      ##BOTH NUMERIC AND CATEGORICAL##
+      else{
+        #breaking the table into its pieces
+        cat_tablex <- tablex[tablex[,'type']=='categorical',]
+        num_tablex <- tablex[tablex[,'type']=='numeric',]
+        
+        
+        ##NUMERIC PART OF SEGDIFFS##
+        segdf = data.frame(matrix(nrow = NumSeg,ncol=nrow(num_tablex)),row.names=seglabel)
+        #getting rid of the type columns
+        num_tablex = num_tablex[,-ncol(num_tablex)]
+        #changed colnames from being row.names
+        colnames(segdf) = num_tablex[,1]
+        seg_meana <- ddply(cluster_block, .(cluster), numcolwise(round_mean))
+     
+        seg_meana = seg_meana[,2:length(seg_meana)]
+        seg_sda <- ddply(cluster_block, .(cluster), numcolwise(round_sd))
+        seg_sda = seg_sda[,2:length(seg_sda)]
+        
+        orignames <- colnames(cluster_block)
+        
+        #constructing the inverse tables (mean or sd of the data for data NOT EQUAL to the cluster of choice)
+        num_cluster_block <- cluster_block[,SegVarTypes=='numeric' | colnames(cluster_block) == 'cluster']
+
+        if(NumerCount>1){        
+        seg_meani <- transpose(data.frame(sapply(seglabel, FUN = function(x) sapply(num_cluster_block[num_cluster_block$cluster != x,1:ncol(num_cluster_block)-1], function(y) mean(y,na.rm=TRUE)))))
+        } else{
+          seg_meani <- transpose(data.frame(sapply(seglabel, FUN = function(x) mean(num_cluster_block[,1][num_cluster_block$cluster !=x]))))
+      }
+        #no idea what i'm doing with this subsetting of orignames and why it is needed but whatever
+        colnames(seg_meani) <- orignames[1:ncol(seg_meani)]
+        
+        
+        
+        if(NumerCount>1){
+        seg_sdi <- transpose(as.data.frame(sapply(seglabel, FUN = function(x) sapply(num_cluster_block[num_cluster_block$cluster != x,1:ncol(num_cluster_block)-1], function(y) sd(y,na.rm=TRUE)))))
+        }
+        else{
+          seg_sdi <- transpose(data.frame(sapply(seglabel, FUN = function(x) sd(num_cluster_block[,1][num_cluster_block$cluster !=x]))))
+        }
+        colnames(seg_sdi) <- orignames[1:ncol(seg_sdi)]
+        
+
+        
+        #constructing the table of differences
+        if(seg_sdi>0){
+          segdiffs_num <- ((seg_meana - seg_meani) / seg_sdi)
+        } else{
+          segdiffs_num <- (seg_meana - seg_meani)
+        }
+      
+        colnames(segdiffs_num) <- c("seg1", "seg2")
+        ##END NUMERICAL PART OF SEGDIFFS##
+        
+        
+        
+        ##CATEGORICAL PART OF SEGDIFFS##
+        tablexcol = seq(3,ncol(cat_tablex),by=2)
+        obs_val = cat_tablex[,tablexcol]
+        obs_val = obs_val[,-ncol(obs_val)]
+        
+        expected_val <- sapply(1:nrow(obs_val), FUN = function(y) sapply(1:ncol(obs_val), FUN = function(x) mean(as.numeric(obs_val[x,-y]))))
+        print(expected_val)
+        print(obs_val)
+        segdiffs_cat <- (obs_val - expected_val)/expected_val
+        colnames(segdiffs_cat) <- c("seg1", "seg2")
+
+        segdiffs_cat[segdiffs_cat == Inf | segdiffs_cat == -Inf | segdiffs_cat == NaN] = 0
+        # print(segdiffs)
+        ##?? HERE - COME BACK TO CORRECT THIS CHI SQUARE and make the color coding meaningful###
+        
+        #To format as percent
+        percent <- function(x, digits = 2, format = "f", ...) {
+          paste0(formatC(100 * as.numeric(x), format = format, digits = digits, ...), "%")
+        }
+        
+    
+        tablex[tablex[,'type']=='categorical',seq(4,ncol(tablex),by=2)]=""
+        
+        tablex[tablex[,'type']=='categorical',seq(3,ncol(tablex),by=2)] = apply(tablex[tablex[,'type']=='categorical',seq(3,ncol(tablex),by=2)],MARGIN = c(1,2),FUN = percent)
+        
+        print("FUCK")
+        print(tablex)
+        
+        ##END OF CATEGORICAL PART OF SEGDIFFS##
+        
+        #Getting rid of the "TYPE" variable in tablex
+        tablex = tablex[,-ncol(tablex)]
+        segdiffs = rbind(segdiffs_num,segdiffs_cat)
+       
+        
+      }
+      
+     
+      
+      #COLOR CODING
+      #including defining the significance cutoffs for color coding
+      color_vector <- c("rgb(222,124,124)","rgb(219,23,23)","rgb(255,255,255)","rgb(218,252,229)","rgb(56,166,93)")
+      first_sd_vector <- c(-1000,-1,-0.5,0.5,1)
+      sec_sd_vector <- c(-1,-0.5,0.5,1,1000)
+      #Color function creator
+      colordic = function(colors, less, greater, ref){
+        return(colors[greater>ref & less<=ref])
+      }
+      
+      
+      #Creating color coding dataframe based on difference tables
+      colorcode <- sapply(seglabel,FUN = function(y) sapply(segdiffs[,y],FUN = function(x) colordic(color_vector,first_sd_vector,sec_sd_vector,x)))
+      #creating formatted container
+      sketch = htmltools::withTags(table(
+        class = 'display',
+        thead(
+          tr(
+            th(rowspan = 1, ""),
+            th(rowspan = 1, 'Segments'),
+            lapply(c(seq(1:NumSeg)),th,colspan=2)
+          ),
+          tr(
+            th(rowspan = 1, 'Question'),
+            th(rowspan = 1, 'Answer'),
+            lapply(rep(c('Mean', 'SD'),NumSeg),th)
+          )
+        )
+      ))
+      
+      
+      
+      #outputting data in the formatted table
+      
+      #to remove SD values for these vate
+      return(datatable(tablex, container = sketch, rownames = FALSE)%>% formatStyle(columns = c(seq(3,NumSeg*2+1,by=2)),target="cell", backgroundColor = styleEqual(as.matrix(tablex[,c(seq(3,NumSeg*2+1,by=2))]),colorcode)))
+    }
+    ###END COLOR CODING###
+    
+    #THIS STUFF IS RUN OUTSIDE THE FUNCTIONS INDEPENDENTLY
     #returning error if selected multiple of the same variable
     if(Name_Count != Unique_Name_Count) {
     return(data.table("error, please check your inputs!"))
     } else {
-      
+      #ONLY NUMERIC VARIABLES
       if(NumerCount == Name_Count){
         data_1 <- as.data.frame(survey_data_reactive())
         data_2 <- na.omit(data_1[,colnames(data_1) %in% SegNames])
@@ -194,43 +398,53 @@ server <- function(input, output, session) {
         data_3[is.na(data_3)] <- 0
         k_analysis <- kmeans(data_3,input$segment_num)
         #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
-        data_2$cluster <- as.factor(c(k_analysis$cluster,1,1))[1:nrow(data_2)]
+        
+        data_2$cluster <- as.factor(k_analysis$cluster)
+        # data_2$cluster <- as.factor(c(k_analysis$cluster,1,1))[1:nrow(data_2)]
+        
       } else{
-          
+          #ONLY CATEGORICAL VARIABLES
           if(CatCount == Name_Count){
             data_1 <- as.data.frame(survey_data_reactive())
             #changing values to factors
-            data_2 <- sapply(na.omit(data_1[,colnames(data_1) %in% CatNames]),factor)
+            data_2 <- as.data.frame(sapply(na.omit(data_1[,colnames(data_1) %in% CatNames]),as.factor))
             data_3 <- as.data.frame(data_2)
             #??how to handle these nas instead of removing?
             data_3[is.na(data_3)] <- 0
             k_analysis <- kmodes(data_3,input$segment_num)
             #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
-            data_2$cluster <- as.factor(c(k_analysis$cluster,1,1))[1:nrow(data_2)]    
-          } else{
-            
-            data_1 <- as.data.frame(survey_data_reactive())
-            data_2 <- na.omit(data_1[,colnames(data_1) %in% SegNames])
-            ###ACCOUNTING FOR USING LAPPLY ON A SINGLE ITEM LIST###
-            if(length(CatNames)>1){
-            data_2[,colnames(data_2) %in% CatNames] <- lapply(data_2[,colnames(data_2) %in% CatNames],as.factor)
-            } else {
-              data_2[,colnames(data_2) %in% CatNames] <- as.factor(data_2[,colnames(data_2) %in% CatNames])
-            }
-            ###ALSO ENSURING NUMERIC VARIABLES ARE CLASS NUMERIC###
-            if(length(NumNames)>1){
-              data_2[,colnames(data_2) %in% NumNames] <- lapply(data_2[,colnames(data_2) %in% NumNames],as.numeric)
-            } else {
-              data_2[,colnames(data_2) %in% NumNames] <- as.numeric(data_2[,colnames(data_2) %in% NumNames])
-            }
-            
-            data_3 <- data_2
-           
-            #??how to handle these nas instead of removing?
-            data_3[is.na(data_3)] <- 0
-            k_analysis <- kproto(data_3,input$segment_num)
-            #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
-            data_2$cluster <- as.factor(c(k_analysis$cluster,1,1))[1:nrow(data_2)]
+            #HERE IS THER ISSUE - make sure that this does not get "coerced into a list"
+            data_2$cluster <- c(k_analysis$cluster,1,1)[1:nrow(data_2)]
+                } 
+                  # BOTH CATEGORICAL AND NUMERIC VARIABLES
+                  else{
+                  
+                  data_1 <- as.data.frame(survey_data_reactive())
+                  data_2 <- na.omit(data_1[,colnames(data_1) %in% SegNames])
+                  
+                  ###ACCOUNTING FOR USING LAPPLY ON A SINGLE ITEM LIST###
+                  if(sum(CatNames != "")>1){
+                    data_2[,colnames(data_2) %in% CatNames] <- lapply(data_2[,colnames(data_2) %in% CatNames],as.factor)
+                  } else {
+                    data_2[,colnames(data_2) %in% CatNames] <- as.factor(data_2[,colnames(data_2) %in% CatNames])
+                  }
+                  
+                  ###ALSO ENSURING NUMERIC VARIABLES ARE CLASS NUMERIC###
+                  if(sum(NumNames != "")>1){
+                    data_2[,colnames(data_2) %in% NumNames] <- lapply(data_2[,colnames(data_2) %in% NumNames],as.numeric)
+                  } else {
+                    data_2[,colnames(data_2) %in% NumNames] <- as.numeric(data_2[,colnames(data_2) %in% NumNames])
+                  }
+                 
+                  data_3 <- data_2
+                 
+                  #??how to handle these nas instead of removing?
+                  # data_3[is.na(data_3)] <- 0
+
+                  k_analysis <- kproto(data_3,input$segment_num)
+                  #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
+                  
+                  data_2$cluster <- as.factor(k_analysis$cluster)
           }
         
         }
@@ -239,8 +453,7 @@ server <- function(input, output, session) {
     
     #running the aggregation function on the data_1 that we just created
     orignames <- colnames(data_2)
-    tablex <- create_data(data_2)
-    print(tablex[1:10,1:3])
+    tablex <- create_data(data_2, SegVarTypes)
     returntable <- output_table(tablex,input$segment_num,data_2)
     return(returntable)
     

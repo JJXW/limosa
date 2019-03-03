@@ -78,13 +78,13 @@ body <- dashboardBody(
             ),
             
             fluidRow(
-              column(3,selectInput('segvar1_type', 'Variable 1: Type',choices = c('','categorical','numerical'),multiple = F)
+              column(3,selectInput('segvar1_type', 'Variable 1: Type',choices = c('','categorical','numeric'),multiple = F)
               ),
-              column(3,selectInput('segvar2_type', 'Variable 2: Type',choices = c('','categorical','numerical'),multiple = F)
+              column(3,selectInput('segvar2_type', 'Variable 2: Type',choices = c('','categorical','numeric'),multiple = F)
               ),
-              column(3,selectInput('segvar3_type', 'Variable 3: Type',choices = c('','categorical','numerical'),multiple = F)
+              column(3,selectInput('segvar3_type', 'Variable 3: Type',choices = c('','categorical','numeric'),multiple = F)
               ),
-              column(3,selectInput('segvar4_type', 'Variable 4: Type',choices = c('','categorical','numerical'),multiple = F)
+              column(3,selectInput('segvar4_type', 'Variable 4: Type',choices = c('','categorical','numeric'),multiple = F)
               )
             ),
             
