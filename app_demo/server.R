@@ -1,6 +1,7 @@
 server <- function(input, output, session) { 
 
 ####DATA INPUT AND EXPLORATION####
+
   survey_data_reactive <-
     reactive({
       
@@ -14,13 +15,23 @@ server <- function(input, output, session) {
       return(survey_data)
       
     })
+ 
+ observe({values <- colnames(survey_data_reactive())
+ 
+ updateSelectInput(session,"segvar1",label = "Variable 1: Select",choices = c('',values))
+ updateSelectInput(session,"segvar2",label = "Variable 2: Select",choices = c('',values))
+ updateSelectInput(session,"segvar3",label = "Variable 3: Select",choices = c('',values))
+ updateSelectInput(session,"segvar4",label = "Variable 4: Select",choices = c('',values))
+ 
+ 
+ })
   
   output$rawtable <- DT::renderDataTable({
     DT::datatable(data = survey_data_reactive(),
                   options = list(scrollX = T))
+    
   })
   
-
   
   output$survey_rows <- renderValueBox({
     
@@ -43,6 +54,8 @@ server <- function(input, output, session) {
     )
   
   })
+  
+
 
 ####AUTO SEGMENTATION####
   round_mean = function(x){
@@ -58,8 +71,10 @@ server <- function(input, output, session) {
    
     #create strings of the important inputs
     SegNames <- c(input$segvar1,input$segvar2,input$segvar3,input$segvar4)
+    SegNames <- SegNames[SegNames != ""]
     SegVarTypes <- c(input$segvar1_type,input$segvar2_type,input$segvar3_type,input$segvar4_type)
     SegVarTypes <- SegVarTypes[SegVarTypes != ""]
+    SegVarTypes[length(SegVarTypes)+1] <- 'cluster'
     SegVarPurp <- c(input$segvar1_purp,input$segvar2_purp,input$segvar3_purp,input$segvar4_purp)
     CatNames <- SegNames[SegVarTypes == 'categorical']
     NumNames <- SegNames[SegVarTypes == 'numeric']
@@ -74,6 +89,9 @@ server <- function(input, output, session) {
       
       orignames <- colnames(cluster_data)
       
+      print("checking wtf")
+      print(cluster_data[1:10,])
+      
       numer_block <- cluster_data[,Types == 'numeric' | colnames(cluster_data) == 'cluster']
 
       if(sum(Types =='numeric')>0){
@@ -85,7 +103,12 @@ server <- function(input, output, session) {
         numer_block <- NULL
       }
       
+      print("HERE TOO")
+      print(numer_block[1:10,])
+      
       cat_block <- cluster_data[,Types == 'categorical' | colnames(cluster_data) == 'cluster']
+     
+      
       if(sum(Types=='categorical')>0){
         cat_block <- as.data.frame(sapply(colnames(cat_block), FUN = function(x) as.factor(cat_block[,x])))
         colnames(cat_block) = colnames(cluster_data)[Types =='categorical' | colnames(cluster_data) == 'cluster']
@@ -106,13 +129,14 @@ server <- function(input, output, session) {
           # colnames(cat_block) <- colnames(cluster_data)[Types=='factor' | colnames(cluster_data) == 'cluster']
           question_list <- colnames(cat_block)[-match('cluster',colnames(cat_block))]
           
+          
           #function to create the number of rows needed
           rowcount = function(x) {
             return(length(unique(x)))
           }
           
-          rows_of_catframe = sum(unlist(lapply(as.data.frame(cat_block),rowcount)))
-         
+          rows_of_catframe = sum(unlist(lapply(as.data.frame(cat_block[,-match('cluster',colnames(cat_block))]),rowcount)))
+
           output_frame = as.data.frame(matrix(0,nrow=rows_of_catframe,ncol=cluster_count*2+2))
           colnames(output_frame) = c('Question','Answer',rep(c('Mean','SD'),cluster_count))
 
@@ -122,7 +146,7 @@ server <- function(input, output, session) {
           for(q in question_list){
             for(u in (unique(datacube[,q]))){
               colq = 3
-              for (c in cluster_list) {
+              for (c in cluster_list[order(cluster_list)]) {
                 output_frame[rowq,1] = q
                 output_frame[rowq,2] = u
                 output_frame[rowq,colq] = sum(datacube[,q]==u & datacube$cluster==c)/sum(datacube$cluster==c)
@@ -133,7 +157,7 @@ server <- function(input, output, session) {
             
           }
           #here ends the categorical table function
-
+         
           return(output_frame)
         }
       } else {
@@ -146,16 +170,24 @@ server <- function(input, output, session) {
       if(length(colnames(numer_block))>1){
         #analysis for numeric data#
         
+        print("before analysis")
+        print(head(numer_block))
+        
         mean_block <- ddply(numer_block, .(cluster), numcolwise(round_mean))
         sd_block <- ddply(numer_block, .(cluster), numcolwise(round_sd))
         stack_data <- rbind(mean_block,sd_block)
+        
+        print("first analysis")
+        print(head(numer_block))
+        
         stack_data <- stack_data[order(stack_data$cluster),]
         output_data <- transpose(stack_data)
         output_data <- output_data[-1,]
         
         #??check the number of rows here... not sure why i need to put the "nrow" piece in otherwise there is mismatch
         output_data$Question <- orignames[-length(orignames)][SegVarTypes == 'numeric']
-        output_data$Answer <- 0
+        output_data$Answer <- ""
+
         # return_data <- output_data %>% select(Question, everything())
         return_data <- output_data[,c(((ncol(output_data)-1):ncol(output_data)),1:(ncol(output_data)-2))]
         colnames(return_data)[3:length(colnames(return_data))] <- rep(c("Mean","SD"),(ncol(return_data)-2)/2)
@@ -186,6 +218,10 @@ server <- function(input, output, session) {
                 output_frame = categorical_table(cat_block)
                 output_frame$type = "categorical"
                 return_data$type = "numeric"
+                print("cat frame")
+                print(output_frame)
+                print("num frame")
+                print(return_data)
                 compiled_data <- rbind(return_data,output_frame)
                
       }
@@ -193,6 +229,7 @@ server <- function(input, output, session) {
     }
     ###END CREATE DATA###
     
+   
     
     ###BEGIN COLOR CODING FUNCTION###
     output_table = function(tablex,NumSeg,cluster_block){
@@ -201,7 +238,7 @@ server <- function(input, output, session) {
       #constructing the straight forward tables
       #IF NUMERICAL ALONE
       seglabel = c(seq(1,NumSeg))
-        ##NUMERIC PART##
+        ##NUMERIC ONLY##
        if(NumerCount == Name_Count){
           segdf = data.frame(matrix(nrow = NumSeg,ncol=nrow(tablex)),row.names=seglabel)
           #changed colnames from being row.names
@@ -229,7 +266,7 @@ server <- function(input, output, session) {
             segdiffs <- transpose(seg_meana - seg_meani)
           }
        }      
-      ##CATEGORICAL PART##
+      ##CATEGORICAL ONLY##
       else if(CatCount==Name_Count){
         tablexcol = seq(3,ncol(tablex),by=2)
         obs_val = tablex[,tablexcol]
@@ -326,13 +363,13 @@ server <- function(input, output, session) {
           paste0(formatC(100 * as.numeric(x), format = format, digits = digits, ...), "%")
         }
         
-    
+        
+        
         tablex[tablex[,'type']=='categorical',seq(4,ncol(tablex),by=2)]=""
         
         tablex[tablex[,'type']=='categorical',seq(3,ncol(tablex),by=2)] = apply(tablex[tablex[,'type']=='categorical',seq(3,ncol(tablex),by=2)],MARGIN = c(1,2),FUN = percent)
         
-        print("FUCK")
-        print(tablex)
+       
         
         ##END OF CATEGORICAL PART OF SEGDIFFS##
         
@@ -421,6 +458,10 @@ server <- function(input, output, session) {
                   
                   data_1 <- as.data.frame(survey_data_reactive())
                   data_2 <- na.omit(data_1[,colnames(data_1) %in% SegNames])
+                  print("important")
+                  print(SegNames)
+                  print(colnames(data_2))
+                  data_2 <- data_2[,SegNames]
                   
                   ###ACCOUNTING FOR USING LAPPLY ON A SINGLE ITEM LIST###
                   if(sum(CatNames != "")>1){
@@ -437,7 +478,7 @@ server <- function(input, output, session) {
                   }
                  
                   data_3 <- data_2
-                 
+                 print(data_3)
                   #??how to handle these nas instead of removing?
                   # data_3[is.na(data_3)] <- 0
 
