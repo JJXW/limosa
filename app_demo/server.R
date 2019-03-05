@@ -210,8 +210,7 @@ server <- function(input, output, session) {
                 compiled_data <- rbind(return_data,output_frame)
                
               }
-      print("checking for scale")
-      print(compiled_data)
+      
       return(as.data.frame(compiled_data))
     }
     ###END CREATE DATA###
@@ -275,6 +274,7 @@ server <- function(input, output, session) {
       }
       ##BOTH NUMERIC AND CATEGORICAL##
       else{
+        
         #breaking the table into its pieces
         cat_tablex <- tablex[tablex[,'type']=='categorical',]
         num_tablex <- tablex[tablex[,'type']=='numeric',]
@@ -287,8 +287,9 @@ server <- function(input, output, session) {
         #changed colnames from being row.names
         colnames(segdf) = num_tablex[,1]
         seg_meana <- ddply(cluster_block, .(cluster), numcolwise(round_mean))
-     
+       
         seg_meana = seg_meana[,2:length(seg_meana)]
+       
         seg_sda <- ddply(cluster_block, .(cluster), numcolwise(round_sd))
         seg_sda = seg_sda[,2:length(seg_sda)]
         
@@ -324,19 +325,23 @@ server <- function(input, output, session) {
           segdiffs_num <- (seg_meana - seg_meani)
         }
       
-        colnames(segdiffs_num) <- c("seg1", "seg2")
+        segdiffs_num <- transpose(segdiffs_num)
+
+        colnames(segdiffs_num) <- c(paste(rep("seg",ncol(segdiffs_num)),1:ncol(segdiffs_num)))
         ##END NUMERICAL PART OF SEGDIFFS##
         
         
         
         ##CATEGORICAL PART OF SEGDIFFS##
+        
         tablexcol = seq(3,ncol(cat_tablex),by=2)
         obs_val = cat_tablex[,tablexcol]
         obs_val = obs_val[,-ncol(obs_val)]
         
         expected_val <- sapply(1:nrow(obs_val), FUN = function(y) sapply(1:ncol(obs_val), FUN = function(x) mean(as.numeric(obs_val[x,-y]))))
+       
         segdiffs_cat <- (obs_val - expected_val)/expected_val
-        colnames(segdiffs_cat) <- c("seg1", "seg2")
+        colnames(segdiffs_cat) <- c(paste(rep("seg",ncol(segdiffs_cat)),1:ncol(segdiffs_cat)))
 
         segdiffs_cat[segdiffs_cat == Inf | segdiffs_cat == -Inf | segdiffs_cat == NaN] = 0
         ##?? HERE - COME BACK TO CORRECT THIS CHI SQUARE and make the color coding meaningful###
