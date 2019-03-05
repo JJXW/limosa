@@ -119,69 +119,209 @@ body <- dashboardBody(
     fluidRow(downloadButton(outputId = "down", label = "Download Analysis"))
     ),
             
+ ###MANUAL SEGMENTATION###          
+    tabItem("manual",
+            fluidRow(titlePanel("Manual Segmentation Tool"),
+                     mainPanel("This tool allows you to segment your data manually based on ranges of variables")),
+            fluidRow(tags$head(
+              tags$style(HTML("hr {border-top: 1px solid #000000;}"))
+            ),hr()
+            ),
+               
+                column(2,
+                  textOutput("col1")
+                ,
+                  selectInput("segment_var_1",
+                               "Variable 1:",
+                               colnames(survey_data_default),
+                               multiple = F)
+                ,
+                  selectInput("segment_var_2",
+                              "Variable 2:",
+                              colnames(survey_data_default),
+                              multiple = F)
+                ,
+                  selectInput("segment_var_3",
+                              "Variable 3:",
+                              colnames(survey_data_default),
+                              multiple = F)
+                ,
+                  selectInput("segment_var_4",
+                              "Variable 4:",
+                              colnames(survey_data_default),
+                              multiple = F)
+                 ),
+                column(2,
+                  textOutput("col2"),
+                  selectInput("type_var_1",
+                              "Type:",
+                              c("","categorical","numeric"),
+                              multiple = F),
+                  selectInput("type_var_2",
+                              "Type:",
+                              c("","categorical","numeric"),
+                              multiple = F),
+                  selectInput("type_var_2",
+                              "Type:",
+                              c("","categorical","numeric"),
+                              multiple = F),
+                  selectInput("type_var_2",
+                              "Type:",
+                              c("","categorical","numeric"),
+                              multiple = F)
+                      )
+            ,
+            
+        ##SEGMENT 1##
+            column(2,
+
+                textOutput("col3"),
+
+                  selectInput("var1_seg1",
+                            "Pick Range",
+                            c("empty"),
+                            selected = NULL,
+                            multiple = T),
+                  selectInput("var2_seg1",
+                              "Pick Range",
+                              colnames(survey_data_default),
+                              selected = NULL,
+                              multiple = T),
+                  selectInput("var3_seg1",
+                              "Pick Range",
+                              colnames(survey_data_default),
+                              selected = NULL,
+                              multiple = T),
+                  selectInput("var4_seg1",
+                              "Pick Range",
+                              colnames(survey_data_default),
+                              selected = NULL,
+                              multiple = T)
+                       ),
            
-    # tabItem("manual",
-    #         fluidRow(
-    #           column(4, 
-    #                  selectInput("segment_var", 
-    #                              "1) Segmenter Variables",
-    #                              colnames(survey_data_default),
-    #                              multiple = T)
-    #                  
-    #           ),
-    #           column(4,
-    #                  selectInput("outcome_var", 
-    #                              "2) Outcome Variables",
-    #                              colnames(survey_data_default),
-    #                              selected = NULL,
-    #                              multiple = T)
-    #           ),
-    #           column(4,
-    #                  numericInput("segment_num", 
-    #                               "3) Number of Segments",
-    #                               value = 2,
-    #                               min = 2,
-    #                               max = 4,
-    #                               step = 1)
-    #           )
-    #           
-    #         ),
-    #         
-    #         fluidRow(
-    #           valueBoxOutput("survey_data_segement_1_rows"),
-    #           valueBoxOutput("survey_data_segement_2_rows")
-    #         ),
-    #         
-    #         
-    #         fluidRow(
-    #           column(2,
-    #                  selectInput('segment_var_1_1',
-    #                              'Group 1 - Segment Variable 1',
-    #                              choices = c(),
-    #                              multiple = T
-    #                  ),
-    #                  selectInput('segment_var_1_2',
-    #                              'Group 1 - Segment Variable 2',
-    #                              choices = c(),
-    #                              multiple = T
-    #                              
-    #                  )
-    #           ),
-    #           column(2,
-    #                  selectInput('segment_var_2_1',
-    #                              'Group 2 - Segment Variable 1',
-    #                              choices = c(),
-    #                              multiple = T
-    #                  ),
-    #                  selectInput('segment_var_2_2',
-    #                              'Group 2 - Segment Variable 2',
-    #                              choices= c(),
-    #                              multiple = T
-    #                  )
-    #           )
-    #           
-    #         )
-    # ),
+       ##SEGMENT 2##
+            column(2,
+                   
+                   textOutput("col4"),
+                   
+                   selectInput("var1_seg2",
+                               "Pick Range",
+                               colnames(survey_data_default),
+                               selected = NULL,
+                               multiple = T),
+                   selectInput("var2_seg2",
+                               "Pick Range",
+                               colnames(survey_data_default),
+                               selected = NULL,
+                               multiple = T),
+                   selectInput("var3_seg2",
+                               "Pick Range",
+                               colnames(survey_data_default),
+                               selected = NULL,
+                               multiple = T),
+                   selectInput("var4_seg2",
+                               "Pick Range",
+                               colnames(survey_data_default),
+                               selected = NULL,
+                               multiple = T)
+            ),
+       
+    ##SEGMENT 3##
+       column(2,
+              
+              textOutput("col5"),
+              
+              selectInput("var1_seg3",
+                          "Pick Range",
+                          colnames(survey_data_default),
+                          selected = NULL,
+                          multiple = T),
+              selectInput("var2_seg3",
+                          "Pick Range",
+                          colnames(survey_data_default),
+                          selected = NULL,
+                          multiple = T),
+              selectInput("var3_seg3",
+                          "Pick Range",
+                          colnames(survey_data_default),
+                          selected = NULL,
+                          multiple = T),
+              selectInput("var4_seg3",
+                          "Pick Range",
+                          colnames(survey_data_default),
+                          selected = NULL,
+                          multiple = T)
+       ),
+    
+    ##SEGMENT 4##
+    column(2,
+           
+           textOutput("col6"),
+           
+           selectInput("var1_seg4",
+                       "Pick Range",
+                       colnames(survey_data_default),
+                       selected = NULL,
+                       multiple = T),
+           selectInput("var2_seg4",
+                       "Pick Range",
+                       colnames(survey_data_default),
+                       selected = NULL,
+                       multiple = T),
+           selectInput("var3_seg4",
+                       "Pick Range",
+                       colnames(survey_data_default),
+                       selected = NULL,
+                       multiple = T),
+           selectInput("var4_seg4",
+                       "Pick Range",
+                       colnames(survey_data_default),
+                       selected = NULL,
+                       multiple = T)
+    )
+
+    
+    ,
+    ##STYLING THE COLUMN HEADERS##
+          tags$head(tags$style("#col1{color: blue;
+                                 font-size: 24px;
+                      font-style: bold;
+                      }"
+                         )
+           ,
+          tags$style("#col2{color: blue;
+                                 font-size: 24px;
+                      font-style: bold;
+                      }"
+                  ),
+          tags$style("#col3{color: grey;
+                                 font-size: 24px;
+               font-style: bold;
+               }"
+                  ),
+          tags$style("#col4{color: grey;
+                                 font-size: 24px;
+                      font-style: bold;
+                      }"
+                 ),
+          tags$style("#col5{color: grey;
+                                 font-size: 24px;
+                      font-style: bold;
+                      }"
+                   ),
+          tags$style("#col6{color: grey;
+                                 font-size: 24px;
+                     font-style: bold;
+                     }"
+                   )
+
+                  )
+    )
+ ,
+ 
+ 
+ 
+ 
     tabItem("dataquality",
             fluidRow(titlePanel("Data Randomization Check"),
             mainPanel("This tool allows you to upload survey responses in choice order, meaning each observation shows if a respondent selected A, B, C, etc. and it does not correspond to answer values. This is to test the quality of your survey writing and randomization.")
@@ -215,7 +355,8 @@ body <- dashboardBody(
             )
             )
       )
-))
+)
+)
 
 ui <- dashboardPage(
   header,

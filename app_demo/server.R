@@ -18,12 +18,53 @@ server <- function(input, output, session) {
  
  observe({values <- colnames(survey_data_reactive())
  
+ #MAKING SURE VARIABLES UPDATE ACROSS SELECTION VARIABLES#
+    #automatic segmentation
  updateSelectInput(session,"segvar1",label = "Variable 1: Select",choices = c('',values))
  updateSelectInput(session,"segvar2",label = "Variable 2: Select",choices = c('',values))
  updateSelectInput(session,"segvar3",label = "Variable 3: Select",choices = c('',values))
  updateSelectInput(session,"segvar4",label = "Variable 4: Select",choices = c('',values))
+ })
  
+ observe({values <- colnames(survey_data_reactive())
+    #manual segmentation
+ updateSelectInput(session,"segment_var_1",label = "Variable 1:",choices = c('',values))
+ updateSelectInput(session,"segment_var_2",label = "Variable 2:",choices = c('',values))
+ updateSelectInput(session,"segment_var_3",label = "Variable 3:",choices = c('',values))
+ updateSelectInput(session,"segment_var_4",label = "Variable 4:",choices = c('',values))
+ })
  
+    #manual segmentation choices
+observe({
+ var1_choice <- unique(survey_data_reactive()[,input$segment_var_1])
+ updateSelectInput(session,"var1_seg1",label = "Pick Range:",choices = c('',var1_choice))
+ updateSelectInput(session,"var1_seg2",label = "Pick Range:",choices = c('',var1_choice))
+ updateSelectInput(session,"var1_seg3",label = "Pick Range:",choices = c('',var1_choice))
+ updateSelectInput(session,"var1_seg4",label = "Pick Range:",choices = c('',var1_choice))
+})
+ 
+observe({
+ var2_choice <- unique(survey_data_reactive()[,input$segment_var_2])
+ updateSelectInput(session,"var2_seg1",label = "Pick Range:",choices = c('',var2_choice))
+ updateSelectInput(session,"var2_seg2",label = "Pick Range:",choices = c('',var2_choice))
+ updateSelectInput(session,"var2_seg3",label = "Pick Range:",choices = c('',var2_choice))
+ updateSelectInput(session,"var2_seg4",label = "Pick Range:",choices = c('',var2_choice))
+})
+ 
+observe({
+ var3_choice <- unique(survey_data_reactive()[,input$segment_var_3])
+ updateSelectInput(session,"var3_seg1",label = "Pick Range:",choices = c('',var3_choice))
+ updateSelectInput(session,"var3_seg2",label = "Pick Range:",choices = c('',var3_choice))
+ updateSelectInput(session,"var3_seg3",label = "Pick Range:",choices = c('',var3_choice))
+ updateSelectInput(session,"var3_seg4",label = "Pick Range:",choices = c('',var3_choice))
+})
+ 
+observe({ 
+   var4_choice <- unique(survey_data_reactive()[,input$segment_var_4])
+   updateSelectInput(session,"var4_seg1",label = "Pick Range:",choices = c('',var4_choice))
+   updateSelectInput(session,"var4_seg2",label = "Pick Range:",choices = c('',var4_choice))
+   updateSelectInput(session,"var4_seg3",label = "Pick Range:",choices = c('',var4_choice))
+   updateSelectInput(session,"var4_seg4",label = "Pick Range:",choices = c('',var4_choice))
  })
   
   output$rawtable <- DT::renderDataTable({
@@ -584,8 +625,13 @@ server <- function(input, output, session) {
   
   
   
-####QUALITY SCORE####
-  
+####MANUAL SEGMENTATION CODE####
+  output$col1 <- renderText(paste("Variable"))
+  output$col2 <- renderText(paste("Type"))
+  output$col3 <- renderText(paste("Segment 1"))
+  output$col4 <- renderText(paste("Segment 2"))
+  output$col5 <- renderText(paste("Segment 3"))
+  output$col6 <- renderText(paste("Segment 4"))  
   
   
 ####JONS FILTERING CODE####
