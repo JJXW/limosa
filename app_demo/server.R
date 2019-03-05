@@ -840,7 +840,7 @@ server <- function(input, output, session) {
     return(output_join)
   }
   
-  
+  help(left_join)
   
   observeEvent(input$go,{
     
