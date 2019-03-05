@@ -106,6 +106,12 @@ body <- dashboardBody(
     fluidRow(
       valueBoxOutput("QualityScore")
     ),
+    fluidRow(wellPanel(
+      column(3,textOutput("Nseg1")),
+      column(3,textOutput("Nseg2")),
+      column(3,textOutput("Nseg3")),
+      column(3,textOutput("Nseg4")))
+    ),
     fluidRow((dataTableOutput("segtable"))
     ),
     fluidRow(downloadButton(outputId = "down", label = "Download Analysis"))

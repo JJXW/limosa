@@ -287,7 +287,11 @@ server <- function(input, output, session) {
         #changed colnames from being row.names
         colnames(segdf) = num_tablex[,1]
         seg_meana <- ddply(cluster_block, .(cluster), numcolwise(round_mean))
-       
+        print("cluster_block")
+        print(head(cluster_block))
+        print("segmeana")
+        print(seg_meana)
+        
         seg_meana = seg_meana[,2:length(seg_meana)]
        
         seg_sda <- ddply(cluster_block, .(cluster), numcolwise(round_sd))
@@ -301,8 +305,11 @@ server <- function(input, output, session) {
         if(NumerCount>1){        
         seg_meani <- transpose(data.frame(sapply(seglabel, FUN = function(x) sapply(num_cluster_block[num_cluster_block$cluster != x,1:ncol(num_cluster_block)-1], function(y) mean(y,na.rm=TRUE)))))
         } else{
-          seg_meani <- transpose(data.frame(sapply(seglabel, FUN = function(x) mean(num_cluster_block[,1][num_cluster_block$cluster !=x]))))
+          seg_meani <- data.frame(sapply(seglabel, FUN = function(x) mean(num_cluster_block[,1][num_cluster_block$cluster !=x])))
       }
+        print("checking the output of seg_meani")
+        print(seg_meani)
+        
         #no idea what i'm doing with this subsetting of orignames and why it is needed but whatever
         colnames(seg_meani) <- orignames[1:ncol(seg_meani)]
         
@@ -312,7 +319,7 @@ server <- function(input, output, session) {
         seg_sdi <- transpose(as.data.frame(sapply(seglabel, FUN = function(x) sapply(num_cluster_block[num_cluster_block$cluster != x,1:ncol(num_cluster_block)-1], function(y) sd(y,na.rm=TRUE)))))
         }
         else{
-          seg_sdi <- transpose(data.frame(sapply(seglabel, FUN = function(x) sd(num_cluster_block[,1][num_cluster_block$cluster !=x]))))
+          seg_sdi <- data.frame(sapply(seglabel, FUN = function(x) sd(num_cluster_block[,1][num_cluster_block$cluster !=x])))
         }
         colnames(seg_sdi) <- orignames[1:ncol(seg_sdi)]
         
@@ -320,11 +327,20 @@ server <- function(input, output, session) {
         
         #constructing the table of differences
         if(seg_sdi>0){
+          print("THIS IS THIS SHIT")
+          print(seg_meana)
+          print(seg_meani)
+          print(seg_sdi)
           segdiffs_num <- ((seg_meana - seg_meani) / seg_sdi)
         } else{
           segdiffs_num <- (seg_meana - seg_meani)
         }
       
+        print("check this stuff")
+        print(segdiffs_num)
+        print(seg_meana)
+        print(seg_meani)
+        
         segdiffs_num <- transpose(segdiffs_num)
 
         colnames(segdiffs_num) <- c(paste(rep("seg",ncol(segdiffs_num)),1:ncol(segdiffs_num)))
@@ -363,6 +379,9 @@ server <- function(input, output, session) {
         
         #Getting rid of the "TYPE" variable in tablex
         tablex = tablex[,-ncol(tablex)]
+        print("STILL")
+        print(segdiffs_cat)
+        print(segdiffs_num)
         segdiffs = rbind(segdiffs_num,segdiffs_cat)
        
         
@@ -466,10 +485,21 @@ server <- function(input, output, session) {
                   data_3[,SegVarTypes=='numeric'] <- scale(data_3[,SegVarTypes=='numeric'])
                   k_analysis <- kproto(data_3,input$segment_num)
                   data_2$cluster <- as.factor(k_analysis$cluster)
+                  
           }
         }
       
     }
+    
+    #seeing if I can correct for the fact that sometimes k analysis coerces data into fewer clusters
+    Segment_Number <- length(unique(data_2$cluster))
+    
+    
+    #creating the N outputs
+    output$Nseg1 <- renderText(paste("N Segment 1: ",sum(data_2$cluster==1)))
+    output$Nseg2 <- renderText(paste("N Segment 2: ",sum(data_2$cluster==2)))
+    output$Nseg3 <- renderText(paste("N Segment 3: ",sum(data_2$cluster==3)))
+    output$Nseg4 <- renderText(paste("N Segment 4: ",sum(data_2$cluster==4)))
     
   ####OUTPUTTING QUALITY SCORE####
     output$QualityScore <- renderValueBox({
@@ -523,7 +553,7 @@ server <- function(input, output, session) {
   #RUNNING THE FUNCTIONS AND OUPUTTING OUR DESIRED TABLE
     orignames <- colnames(data_2)
     tablex <- create_data(data_2, SegVarTypes)
-    returntable <- output_table(tablex,input$segment_num,data_2)
+    returntable <- output_table(tablex,Segment_Number,data_2)
     
   #TRYING TO CREATE DOWNLOAD ABILITY - DOES NOT WORK#
     # output$down <- downloadHandler(
