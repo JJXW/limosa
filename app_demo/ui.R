@@ -161,11 +161,11 @@ body <- dashboardBody(
                               "Type:",
                               c("","categorical","numeric"),
                               multiple = F),
-                  selectInput("type_var_2",
+                  selectInput("type_var_3",
                               "Type:",
                               c("","categorical","numeric"),
                               multiple = F),
-                  selectInput("type_var_2",
+                  selectInput("type_var_4",
                               "Type:",
                               c("","categorical","numeric"),
                               multiple = F)
@@ -177,26 +177,10 @@ body <- dashboardBody(
 
                 textOutput("col3"),
 
-                  selectInput("var1_seg1",
-                            "Pick Range",
-                            c("empty"),
-                            selected = NULL,
-                            multiple = T),
-                  selectInput("var2_seg1",
-                              "Pick Range",
-                              colnames(survey_data_default),
-                              selected = NULL,
-                              multiple = T),
-                  selectInput("var3_seg1",
-                              "Pick Range",
-                              colnames(survey_data_default),
-                              selected = NULL,
-                              multiple = T),
-                  selectInput("var4_seg1",
-                              "Pick Range",
-                              colnames(survey_data_default),
-                              selected = NULL,
-                              multiple = T)
+                uiOutput("var1seg1"),
+                uiOutput("var2seg1"),
+                uiOutput("var3seg1"),
+                uiOutput("var4seg1")
                        ),
            
        ##SEGMENT 2##
@@ -204,80 +188,31 @@ body <- dashboardBody(
                    
                    textOutput("col4"),
                    
-                   selectInput("var1_seg2",
-                               "Pick Range",
-                               colnames(survey_data_default),
-                               selected = NULL,
-                               multiple = T),
-                   selectInput("var2_seg2",
-                               "Pick Range",
-                               colnames(survey_data_default),
-                               selected = NULL,
-                               multiple = T),
-                   selectInput("var3_seg2",
-                               "Pick Range",
-                               colnames(survey_data_default),
-                               selected = NULL,
-                               multiple = T),
-                   selectInput("var4_seg2",
-                               "Pick Range",
-                               colnames(survey_data_default),
-                               selected = NULL,
-                               multiple = T)
+                   uiOutput("var1seg2"),
+                   uiOutput("var2seg2"),
+                   uiOutput("var3seg2"),
+                   uiOutput("var4seg2")
             ),
        
     ##SEGMENT 3##
        column(2,
               
               textOutput("col5"),
-              
-              selectInput("var1_seg3",
-                          "Pick Range",
-                          colnames(survey_data_default),
-                          selected = NULL,
-                          multiple = T),
-              selectInput("var2_seg3",
-                          "Pick Range",
-                          colnames(survey_data_default),
-                          selected = NULL,
-                          multiple = T),
-              selectInput("var3_seg3",
-                          "Pick Range",
-                          colnames(survey_data_default),
-                          selected = NULL,
-                          multiple = T),
-              selectInput("var4_seg3",
-                          "Pick Range",
-                          colnames(survey_data_default),
-                          selected = NULL,
-                          multiple = T)
+              uiOutput("var1seg3"),
+              uiOutput("var2seg3"),
+              uiOutput("var3seg3"),
+              uiOutput("var4seg3")
        ),
     
     ##SEGMENT 4##
     column(2,
            
            textOutput("col6"),
+           uiOutput("var1seg4"),
+           uiOutput("var2seg4"),
+           uiOutput("var3seg4"),
+           uiOutput("var4seg4")
            
-           selectInput("var1_seg4",
-                       "Pick Range",
-                       colnames(survey_data_default),
-                       selected = NULL,
-                       multiple = T),
-           selectInput("var2_seg4",
-                       "Pick Range",
-                       colnames(survey_data_default),
-                       selected = NULL,
-                       multiple = T),
-           selectInput("var3_seg4",
-                       "Pick Range",
-                       colnames(survey_data_default),
-                       selected = NULL,
-                       multiple = T),
-           selectInput("var4_seg4",
-                       "Pick Range",
-                       colnames(survey_data_default),
-                       selected = NULL,
-                       multiple = T)
     )
 
     

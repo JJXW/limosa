@@ -34,37 +34,98 @@ server <- function(input, output, session) {
  updateSelectInput(session,"segment_var_4",label = "Variable 4:",choices = c('',values))
  })
  
-    #manual segmentation choices
+    # manual segmentation choices
+    ##VARIABLE 1
 observe({
- var1_choice <- unique(survey_data_reactive()[,input$segment_var_1])
- updateSelectInput(session,"var1_seg1",label = "Pick Range:",choices = c('',var1_choice))
- updateSelectInput(session,"var1_seg2",label = "Pick Range:",choices = c('',var1_choice))
- updateSelectInput(session,"var1_seg3",label = "Pick Range:",choices = c('',var1_choice))
- updateSelectInput(session,"var1_seg4",label = "Pick Range:",choices = c('',var1_choice))
+ var1_choice <- unique(isolate({survey_data_reactive()})[,input$segment_var_1])
+ 
+ if(input$type_var_1 == "numeric"){
+ output$var1seg1 <- renderUI({sliderInput("var1_seg1","Pick Range:",min = min(as.numeric(na.omit(var1_choice))), max = max(as.numeric(na.omit(var1_choice))),value=c(min(as.numeric(na.omit(var1_choice))),median(as.numeric(na.omit(var1_choice)))))})
+ output$var1seg2 <- renderUI({sliderInput("var1_seg2","Pick Range:",min = min(as.numeric(na.omit(var1_choice))), max = max(as.numeric(na.omit(var1_choice))),value=c(min(as.numeric(na.omit(var1_choice))),median(as.numeric(na.omit(var1_choice)))))})
+ output$var1seg3 <- renderUI({sliderInput("var1_seg3","Pick Range:",min = min(as.numeric(na.omit(var1_choice))), max = max(as.numeric(na.omit(var1_choice))),value=c(min(as.numeric(na.omit(var1_choice))),median(as.numeric(na.omit(var1_choice)))))})
+ output$var1seg4 <- renderUI({sliderInput("var1_seg4","Pick Range:",min = min(as.numeric(na.omit(var1_choice))), max = max(as.numeric(na.omit(var1_choice))),value=c(min(as.numeric(na.omit(var1_choice))),median(as.numeric(na.omit(var1_choice)))))})
+                            
+  } else {
+    output$var1seg1 <- renderUI({selectInput("var1_seg1","Pick Range",choices = c('',var1_choice),multiple = T)})
+    output$var1seg2 <- renderUI({selectInput("var1_seg2","Pick Range",choices = c('',var1_choice),multiple = T)})
+    output$var1seg3 <- renderUI({selectInput("var1_seg3","Pick Range",choices = c('',var1_choice),multiple = T)})
+    output$var1seg4 <- renderUI({selectInput("var1_seg4","Pick Range",choices = c('',var1_choice),multiple = T)})
+          }
+ ##OLD CODE NOT NEEDED I THINK BUT KEEPING IN CASE NEED TO REVERT BACK##                                   
+ # updateSelectInput(session,"var1_seg1",label = "Pick Range:",choices = c('',var1_choice))
+ # updateSelectInput(session,"var1_seg2",label = "Pick Range:",choices = c('',var1_choice))
+ # updateSelectInput(session,"var1_seg3",label = "Pick Range:",choices = c('',var1_choice))
+ # updateSelectInput(session,"var1_seg4",label = "Pick Range:",choices = c('',var1_choice))
+})
+ 
+    ##VARIABLE 2
+    
+observe({
+ var2_choice <- unique(isolate({survey_data_reactive()})[,input$segment_var_2])
+ 
+ if(input$type_var_2 == "numeric"){
+   output$var2seg1 <- renderUI({sliderInput("var2_seg1","Pick Range:",min = min(as.numeric(na.omit(var2_choice))), max = max(as.numeric(na.omit(var2_choice))),value=c(min(as.numeric(na.omit(var2_choice))),median(as.numeric(na.omit(var2_choice)))))})
+   output$var2seg2 <- renderUI({sliderInput("var2_seg2","Pick Range:",min = min(as.numeric(na.omit(var2_choice))), max = max(as.numeric(na.omit(var2_choice))),value=c(min(as.numeric(na.omit(var2_choice))),median(as.numeric(na.omit(var2_choice)))))})
+   output$var2seg3 <- renderUI({sliderInput("var2_seg3","Pick Range:",min = min(as.numeric(na.omit(var2_choice))), max = max(as.numeric(na.omit(var2_choice))),value=c(min(as.numeric(na.omit(var2_choice))),median(as.numeric(na.omit(var2_choice)))))})
+   output$var2seg4 <- renderUI({sliderInput("var2_seg4","Pick Range:",min = min(as.numeric(na.omit(var2_choice))), max = max(as.numeric(na.omit(var2_choice))),value=c(min(as.numeric(na.omit(var2_choice))),median(as.numeric(na.omit(var2_choice)))))})
+   
+ } else {
+   output$var2seg1 <- renderUI({selectInput("var2_seg1","Pick Range",choices = c('',var2_choice),multiple = T)})
+   output$var2seg2 <- renderUI({selectInput("var2_seg2","Pick Range",choices = c('',var2_choice),multiple = T)})
+   output$var2seg3 <- renderUI({selectInput("var2_seg3","Pick Range",choices = c('',var2_choice),multiple = T)})
+   output$var2seg4 <- renderUI({selectInput("var2_seg4","Pick Range",choices = c('',var2_choice),multiple = T)})
+ }
+ 
+ ##OLD CODE NOT NEEDED I THINK BUT KEEPING IN CASE NEED TO REVERT BACK##                                   
+ # updateSelectInput(session,"var2_seg1",label = "Pick Range:",choices = c('',var2_choice))
+ # updateSelectInput(session,"var2_seg2",label = "Pick Range:",choices = c('',var2_choice))
+ # updateSelectInput(session,"var2_seg3",label = "Pick Range:",choices = c('',var2_choice))
+ # updateSelectInput(session,"var2_seg4",label = "Pick Range:",choices = c('',var2_choice))
 })
  
 observe({
- var2_choice <- unique(survey_data_reactive()[,input$segment_var_2])
- updateSelectInput(session,"var2_seg1",label = "Pick Range:",choices = c('',var2_choice))
- updateSelectInput(session,"var2_seg2",label = "Pick Range:",choices = c('',var2_choice))
- updateSelectInput(session,"var2_seg3",label = "Pick Range:",choices = c('',var2_choice))
- updateSelectInput(session,"var2_seg4",label = "Pick Range:",choices = c('',var2_choice))
-})
+ var3_choice <- unique(isolate({survey_data_reactive()})[,input$segment_var_3])
  
-observe({
- var3_choice <- unique(survey_data_reactive()[,input$segment_var_3])
- updateSelectInput(session,"var3_seg1",label = "Pick Range:",choices = c('',var3_choice))
- updateSelectInput(session,"var3_seg2",label = "Pick Range:",choices = c('',var3_choice))
- updateSelectInput(session,"var3_seg3",label = "Pick Range:",choices = c('',var3_choice))
- updateSelectInput(session,"var3_seg4",label = "Pick Range:",choices = c('',var3_choice))
+ if(input$type_var_3 == "numeric"){
+   output$var3seg1 <- renderUI({sliderInput("var3_seg1","Pick Range:",min = min(as.numeric(na.omit(var3_choice))), max = max(as.numeric(na.omit(var3_choice))),value=c(min(as.numeric(na.omit(var3_choice))),median(as.numeric(na.omit(var3_choice)))))})
+   output$var3seg2 <- renderUI({sliderInput("var3_seg2","Pick Range:",min = min(as.numeric(na.omit(var3_choice))), max = max(as.numeric(na.omit(var3_choice))),value=c(min(as.numeric(na.omit(var3_choice))),median(as.numeric(na.omit(var3_choice)))))})
+   output$var3seg3 <- renderUI({sliderInput("var3_seg3","Pick Range:",min = min(as.numeric(na.omit(var3_choice))), max = max(as.numeric(na.omit(var3_choice))),value=c(min(as.numeric(na.omit(var3_choice))),median(as.numeric(na.omit(var3_choice)))))})
+   output$var3seg4 <- renderUI({sliderInput("var3_seg4","Pick Range:",min = min(as.numeric(na.omit(var3_choice))), max = max(as.numeric(na.omit(var3_choice))),value=c(min(as.numeric(na.omit(var3_choice))),median(as.numeric(na.omit(var3_choice)))))})
+   
+ } else {
+   output$var3seg1 <- renderUI({selectInput("var3_seg1","Pick Range",choices = c('',var3_choice),multiple = T)})
+   output$var3seg2 <- renderUI({selectInput("var3_seg2","Pick Range",choices = c('',var3_choice),multiple = T)})
+   output$var3seg3 <- renderUI({selectInput("var3_seg3","Pick Range",choices = c('',var3_choice),multiple = T)})
+   output$var3seg4 <- renderUI({selectInput("var3_seg4","Pick Range",choices = c('',var3_choice),multiple = T)})
+ }
+ 
+ ##OLD CODE NOT NEEDED I THINK BUT KEEPING IN CASE NEED TO REVERT BACK##                                   
+ # updateSelectInput(session,"var3_seg1",label = "Pick Range:",choices = c('',var3_choice))
+ # updateSelectInput(session,"var3_seg2",label = "Pick Range:",choices = c('',var3_choice))
+ # updateSelectInput(session,"var3_seg3",label = "Pick Range:",choices = c('',var3_choice))
+ # updateSelectInput(session,"var3_seg4",label = "Pick Range:",choices = c('',var3_choice))
 })
  
 observe({ 
-   var4_choice <- unique(survey_data_reactive()[,input$segment_var_4])
-   updateSelectInput(session,"var4_seg1",label = "Pick Range:",choices = c('',var4_choice))
-   updateSelectInput(session,"var4_seg2",label = "Pick Range:",choices = c('',var4_choice))
-   updateSelectInput(session,"var4_seg3",label = "Pick Range:",choices = c('',var4_choice))
-   updateSelectInput(session,"var4_seg4",label = "Pick Range:",choices = c('',var4_choice))
+   var4_choice <- unique(isolate({survey_data_reactive()})[,input$segment_var_4])
+   
+   if(input$type_var_4 == "numeric"){
+     output$var4seg1 <- renderUI({sliderInput("var4_seg1","Pick Range:",min = min(as.numeric(na.omit(var4_choice))), max = max(as.numeric(na.omit(var4_choice))),value=c(min(as.numeric(na.omit(var4_choice))),median(as.numeric(na.omit(var4_choice)))))})
+     output$var4seg2 <- renderUI({sliderInput("var4_seg2","Pick Range:",min = min(as.numeric(na.omit(var4_choice))), max = max(as.numeric(na.omit(var4_choice))),value=c(min(as.numeric(na.omit(var4_choice))),median(as.numeric(na.omit(var4_choice)))))})
+     output$var4seg3 <- renderUI({sliderInput("var4_seg3","Pick Range:",min = min(as.numeric(na.omit(var4_choice))), max = max(as.numeric(na.omit(var4_choice))),value=c(min(as.numeric(na.omit(var4_choice))),median(as.numeric(na.omit(var4_choice)))))})
+     output$var4seg4 <- renderUI({sliderInput("var4_seg4","Pick Range:",min = min(as.numeric(na.omit(var4_choice))), max = max(as.numeric(na.omit(var4_choice))),value=c(min(as.numeric(na.omit(var4_choice))),median(as.numeric(na.omit(var4_choice)))))})
+     
+   } else {
+     output$var4seg1 <- renderUI({selectInput("var4_seg1","Pick Range",choices = c('',var4_choice),multiple = T)})
+     output$var4seg2 <- renderUI({selectInput("var4_seg2","Pick Range",choices = c('',var4_choice),multiple = T)})
+     output$var4seg3 <- renderUI({selectInput("var4_seg3","Pick Range",choices = c('',var4_choice),multiple = T)})
+     output$var4seg4 <- renderUI({selectInput("var4_seg4","Pick Range",choices = c('',var4_choice),multiple = T)})
+   }
+   ##OLD CODE NOT NEEDED I THINK BUT KEEPING IN CASE NEED TO REVERT BACK##                                   
+   # updateSelectInput(session,"var4_seg1",label = "Pick Range:",choices = c('',var4_choice))
+   # updateSelectInput(session,"var4_seg2",label = "Pick Range:",choices = c('',var4_choice))
+   # updateSelectInput(session,"var4_seg3",label = "Pick Range:",choices = c('',var4_choice))
+   # updateSelectInput(session,"var4_seg4",label = "Pick Range:",choices = c('',var4_choice))
  })
   
   output$rawtable <- DT::renderDataTable({
