@@ -370,10 +370,7 @@ observe({
         #changed colnames from being row.names
         colnames(segdf) = num_tablex[,1]
         seg_meana <- ddply(cluster_block, .(cluster), numcolwise(round_mean))
-        print("cluster_block")
-        print(head(cluster_block))
-        print("segmeana")
-        print(seg_meana)
+       
         
         seg_meana = seg_meana[,2:length(seg_meana)]
        
@@ -409,10 +406,6 @@ observe({
         
         #constructing the table of differences
         if(seg_sdi>0){
-          print("THIS IS THIS SHIT")
-          print(seg_meana)
-          print(seg_meani)
-          print(seg_sdi)
           segdiffs_num <- ((seg_meana - seg_meani) / seg_sdi)
         } else{
           segdiffs_num <- (seg_meana - seg_meani)
@@ -457,9 +450,7 @@ observe({
         
         #Getting rid of the "TYPE" variable in tablex
         tablex = tablex[,-ncol(tablex)]
-        print("STILL")
-        print(segdiffs_cat)
-        print(segdiffs_num)
+        
         segdiffs = rbind(segdiffs_num,segdiffs_cat)
        
         
@@ -691,6 +682,10 @@ observe({
       
       if(sum(Types =='numeric')>0){
         numer_block <- as.data.frame(apply(numer_block, MARGIN =2, FUN = as.numeric))
+        print("OKOKOK")
+        print(head(cluster_data))
+        print(head(numer_block))
+        print(colnames(cluster_data)[Types =='numeric' | colnames(cluster_data) == 'cluster'])
         colnames(numer_block) = colnames(cluster_data)[Types =='numeric' | colnames(cluster_data) == 'cluster']
         
       } else{
@@ -806,7 +801,6 @@ observe({
         compiled_data <- rbind(return_data,output_frame)
         
       }
-      print(as.data.frame(compiled_data))
       return(as.data.frame(compiled_data))
     }
     ###END CREATE DATA MANUAL###
@@ -883,7 +877,13 @@ observe({
         num_tablex = num_tablex[,-ncol(num_tablex)]
         #changed colnames from being row.names
         colnames(segdf) = num_tablex[,1]
-        seg_meana <- ddply(cluster_block, .(cluster), numcolwise(round_mean))
+        
+        #constructing the inverse tables (mean or sd of the data for data NOT EQUAL to the cluster of choice)
+        num_cluster_block <- cluster_block[,SegVarTypes_man=='numeric' | colnames(cluster_block) == 'cluster']
+        
+        ##??START HERE HOW TO GET IT SUCH THAT ONLY INCLUDES NUMERIC VARIABLES!
+        seg_meana <- ddply(num_cluster_block, .(cluster), numcolwise(round_mean))
+        
       
         seg_meana = seg_meana[,2:length(seg_meana)]
         
@@ -891,9 +891,7 @@ observe({
         seg_sda = seg_sda[,2:length(seg_sda)]
         
         orignames <- colnames(cluster_block)
-        
-        #constructing the inverse tables (mean or sd of the data for data NOT EQUAL to the cluster of choice)
-        num_cluster_block <- cluster_block[,SegVarTypes_man=='numeric' | colnames(cluster_block) == 'cluster']
+
         
         if(NumerCount_man>1){        
           seg_meani <- transpose(data.frame(sapply(seglabel, FUN = function(x) sapply(num_cluster_block[num_cluster_block$cluster != x,1:ncol(num_cluster_block)-1], function(y) mean(y,na.rm=TRUE)))))
@@ -914,6 +912,10 @@ observe({
         }
         colnames(seg_sdi) <- orignames[1:ncol(seg_sdi)]
         
+        print("ok check here")
+        print(seg_meana)
+        print(seg_meani)
+        print(seg_sdi)
         
         #constructing the table of differences
         if(seg_sdi>0){
@@ -1034,27 +1036,32 @@ observe({
       if(length(SegNames_man) == 4){
 
       ##FILTERING THE CLUSTERS##
-        data_2$cluster[as.logical((data_2[,SegNames_man[1]] %in% rng_seg1[1]) * (data_2[,SegNames_man[2]] %in% rng_seg1[2]) * (data_2[,SegNames_man[3]] %in% rng_seg1[3]) * (data_2[,SegNames_man[4]] %in% rng_seg1[4]))] = 1
-        data_2$cluster[as.logical((data_2[,SegNames_man[1]] %in% rng_seg2[1]) * (data_2[,SegNames_man[2]] %in% rng_seg2[2]) * (data_2[,SegNames_man[3]] %in% rng_seg2[3]) * (data_2[,SegNames_man[4]] %in% rng_seg2[4]))] = 2
+        data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg1[1]))) * (as.character(data_2[,SegNames_man[2]]) %in% as.character(unlist(rng_seg1[2]))) * (as.character(data_2[,SegNames_man[3]]) %in% as.character(unlist(rng_seg1[3]))) * (as.character(data_2[,SegNames_man[4]]) %in% as.character(unlist(rng_seg1[4]))))] = 1
+        data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg2[1]))) * (as.character(data_2[,SegNames_man[2]]) %in% as.character(unlist(rng_seg2[2]))) * (as.character(data_2[,SegNames_man[3]]) %in% as.character(unlist(rng_seg2[3]))) * (as.character(data_2[,SegNames_man[4]]) %in% as.character(unlist(rng_seg2[4]))))] = 2
         if(SegNum_man > 2){
-        data_2$cluster[as.logical((data_2[,SegNames_man[1]] %in% rng_seg3[1]) * (data_2[,SegNames_man[2]] %in% rng_seg3[2]) * (data_2[,SegNames_man[3]] %in% rng_seg3[3]) * (data_2[,SegNames_man[4]] %in% rng_seg3[4]))] = 3
+        data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg3[1]))) * (as.character(data_2[,SegNames_man[2]]) %in% as.character(unlist(rng_seg3[2]))) * (as.character(data_2[,SegNames_man[3]]) %in% as.character(unlist(rng_seg3[3]))) * (as.character(data_2[,SegNames_man[4]]) %in% as.character(unlist(rng_seg3[4]))))] = 3
         }
         if(SegNum_man > 3){
-        data_2$cluster[as.logical((data_2[,SegNames_man[1]] %in% rng_seg4[1]) * (data_2[,SegNames_man[2]] %in% rng_seg4[2]) * (data_2[,SegNames_man[3]] %in% rng_seg4[3]) * (data_2[,SegNames_man[4]] %in% rng_seg4[4]))] = 4
-           }
-                                    }
+        data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg4[1]))) * (as.character(data_2[,SegNames_man[2]]) %in% as.character(unlist(rng_seg4[2]))) * (as.character(data_2[,SegNames_man[3]]) %in% as.character(unlist(rng_seg4[3]))) * (as.character(data_2[,SegNames_man[4]]) %in% as.character(unlist(rng_seg4[4]))))] = 4
+        }
+        #REGARDLESS OF IF CLAUSES SET ALL NA TO SEGMENT 0
+        data_2 = data_2[is.na(data_2$cluster)==FALSE,]
+      }
+      
       ##IF THERE ARE THREE VARIABLES##
       if(length(SegNames_man) == 3){
         
         ##FILTERING THE CLUSTERS##
-        data_2$cluster[as.logical((data_2[,SegNames_man[1]] %in% rng_seg1[1]) * (data_2[,SegNames_man[2]] %in% rng_seg1[2]) * (data_2[,SegNames_man[3]] %in% rng_seg1[3]))] = 1
-        data_2$cluster[as.logical((data_2[,SegNames_man[1]] %in% rng_seg2[1]) * (data_2[,SegNames_man[2]] %in% rng_seg2[2]) * (data_2[,SegNames_man[3]] %in% rng_seg2[3]))] = 2
+        data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg1[1]))) * (as.character(data_2[,SegNames_man[2]]) %in% as.character(unlist(rng_seg1[2]))) * (as.character(data_2[,SegNames_man[3]]) %in% as.character(unlist(rng_seg1[3]))))] = 1
+        data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg2[1]))) * (as.character(data_2[,SegNames_man[2]]) %in% as.character(unlist(rng_seg2[2]))) * (as.character(data_2[,SegNames_man[3]]) %in% as.character(unlist(rng_seg2[3]))))] = 2
         if(SegNum_man > 2){
-          data_2$cluster[as.logical((data_2[,SegNames_man[1]] %in% rng_seg3[1]) * (data_2[,SegNames_man[2]] %in% rng_seg3[2]) * (data_2[,SegNames_man[3]] %in% rng_seg3[3]))] = 3
+          data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg3[1]))) * (as.character(data_2[,SegNames_man[2]]) %in% as.character(unlist(rng_seg3[2]))) * (as.character(data_2[,SegNames_man[3]]) %in% as.character(unlist(rng_seg3[3]))))] = 3
         }
         if(SegNum_man > 3){
-          data_2$cluster[as.logical((data_2[,SegNames_man[1]] %in% rng_seg4[1]) * (data_2[,SegNames_man[2]] %in% rng_seg4[2]) * (data_2[,SegNames_man[3]] %in% rng_seg4[3]))] = 4
+          data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg4[1]))) * (as.character(data_2[,SegNames_man[2]]) %in% as.character(unlist(rng_seg4[2]))) * (as.character(data_2[,SegNames_man[3]]) %in% as.character(unlist(rng_seg4[3]))))] = 4
         }
+        #REGARDLESS OF IF CLAUSES SET ALL NA TO SEGMENT 0
+        data_2 = data_2[is.na(data_2$cluster)==FALSE,]
       }
       
       ##IF THERE ARE TWO VARIABLES##
@@ -1063,33 +1070,36 @@ observe({
         ##START HERE MAKE ALL THE SEGMENTING THE SAME LOGIC AS THIS WITH THE AS.NUMERIC + UNLIST)
         ##NOTE: THE CATEGORICAL + NUMERICAL COMBINATION DOES NOT WORK AS OF NOW; SOMETHING BROKEN IN THE AGGREGATION
         ##FILTERING THE CLUSTERS##
-        data_2$cluster[as.logical((as.numeric(data_2[,SegNames_man[1]]) %in% as.numeric(unlist(rng_seg1[1]))) * (as.numeric(data_2[,SegNames_man[2]]) %in% as.numeric(unlist(rng_seg1[2]))))] = 1
+        data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg1[1]))) * (as.character(data_2[,SegNames_man[2]]) %in% as.character(unlist(rng_seg1[2]))))] = 1
 
-        data_2$cluster[as.logical((as.numeric(data_2[,SegNames_man[1]]) %in% as.numeric(unlist(rng_seg2[1]))) * (as.numeric(data_2[,SegNames_man[2]]) %in% as.numeric(unlist(rng_seg2[2]))))] = 2
+        data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg2[1]))) * (as.character(data_2[,SegNames_man[2]]) %in% as.character(unlist(rng_seg2[2]))))] = 2
         if(SegNum_man > 2){
-          data_2$cluster[as.logical((as.numeric(data_2[,SegNames_man[1]]) %in% as.numeric(unlist(rng_seg3[1]))) * (as.numeric(data_2[,SegNames_man[2]]) %in% as.numeric(unlist(rng_seg3[2]))))] = 3
+          data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg3[1]))) * (as.character(data_2[,SegNames_man[2]]) %in% as.character(unlist(rng_seg3[2]))))] = 3
         }
         if(SegNum_man > 3){
-          data_2$cluster[as.logical((as.numeric(data_2[,SegNames_man[1]]) %in% as.numeric(unlist(rng_seg4[1]))) * (as.numeric(data_2[,SegNames_man[2]]) %in% as.numeric(unlist(rng_seg4[2]))))] = 4
+          data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg4[1]))) * (as.character(data_2[,SegNames_man[2]]) %in% as.character(unlist(rng_seg4[2]))))] = 4
         }
         
+       
         #REGARDLESS OF IF CLAUSES SET ALL NA TO SEGMENT 0
         data_2 = data_2[is.na(data_2$cluster)==FALSE,]
-        print(data_2$cluster)
       }
       
       ##IF THERE IS ONE VARIABLE##
       if(length(SegNames_man) == 1){
         
         ##FILTERING THE CLUSTERS##
-        data_2$cluster[as.logical((data_2[,SegNames_man[1]] %in% rng_seg1[1]))] = 1
-        data_2$cluster[as.logical((data_2[,SegNames_man[1]] %in% rng_seg2[1]))] = 2
+        data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg1[1]))))] = 1
+        data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg2[1]))))] = 2
         if(SegNum_man > 2){
-          data_2$cluster[as.logical((data_2[,SegNames_man[1]] %in% rng_seg3[1]))] = 3
+          data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg3[1]))))] = 3
         }
         if(SegNum_man > 3){
-          data_2$cluster[as.logical((data_2[,SegNames_man[1]] %in% rng_seg4[1]))] = 4
+          data_2$cluster[as.logical((as.character(data_2[,SegNames_man[1]]) %in% as.character(unlist(rng_seg4[1]))))] = 4
         }
+        #REGARDLESS OF IF CLAUSES SET ALL NA TO SEGMENT 0
+        data_2 = data_2[is.na(data_2$cluster)==FALSE,]
+        
       }
 
       #ONLY NUMERIC VARIABLES
@@ -1151,14 +1161,14 @@ observe({
     
     
     #seeing if I can correct for the fact that sometimes k analysis coerces data into fewer clusters
-    Segment_Number <- length(unique(data_2$cluster))
+    Segment_Number_man <- length(unique(data_2$cluster))
     
     
     #creating the N outputs
-    output$Nseg1 <- renderText(paste("N Segment 1: ",sum(data_2$cluster==1)))
-    output$Nseg2 <- renderText(paste("N Segment 2: ",sum(data_2$cluster==2)))
-    output$Nseg3 <- renderText(paste("N Segment 3: ",sum(data_2$cluster==3)))
-    output$Nseg4 <- renderText(paste("N Segment 4: ",sum(data_2$cluster==4)))
+    output$Nseg1_man <- renderText(paste("N Segment 1: ",sum(data_2$cluster==1)))
+    output$Nseg2_man <- renderText(paste("N Segment 2: ",sum(data_2$cluster==2)))
+    output$Nseg3_man <- renderText(paste("N Segment 3: ",sum(data_2$cluster==3)))
+    output$Nseg4_man <- renderText(paste("N Segment 4: ",sum(data_2$cluster==4)))
     
     ####OUTPUTTING QUALITY SCORE####
     output$QualityScore_man <- renderValueBox({
@@ -1210,10 +1220,9 @@ observe({
     
     
     #RUNNING THE FUNCTIONS AND OUPUTTING OUR DESIRED TABLE
-    print(input$var1_seg1)
     orignames <- colnames(data_2)
     tablex <- create_data_man(data_2, SegVarTypes_man)
-    returntable <- output_table_man(tablex,Segment_Number,data_2)
+    returntable <- output_table_man(tablex,Segment_Number_man,data_2)
     
     #TRYING TO CREATE DOWNLOAD ABILITY - DOES NOT WORK#
     # output$down <- downloadHandler(
