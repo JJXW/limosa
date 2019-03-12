@@ -232,10 +232,20 @@ body <- dashboardBody(
             ),hr()),
             fluidRow(
               column(6,
-              fileInput(inputId = "inFile",label = "CSV of Your Survey Data in Choice Order"))
+              fileInput(inputId = "inFile",label = "CSV of Your Survey Data in Choice Order")),
+              
+                     valueBoxOutput("randomScore")
             ),
             fluidRow(
               column(6,actionButton("go", "Go!"))
+            ),
+            
+            fluidRow(column(12,"The Top 10 Answer Choices Demonstrating Non Random Behavior", align = "center")
+                     
+            ),
+            fluidRow(column(12, 
+                            wellPanel(dataTableOutput("testable"))
+            )
             ),
             fluidRow(
               column(6,"Answer Selection Frequency: Actual vs. Expected If Random", align = "center"),
@@ -247,14 +257,7 @@ body <- dashboardBody(
             ),
             column(6,
               wellPanel(plotOutput("normal"))
-            )),
-            fluidRow(column(12,"The Top 10 Answer Choices Demonstrating Non Random Behavior", align = "center")
-              
-            ),
-            fluidRow(column(12, 
-             wellPanel(dataTableOutput("testable"))
-            )
-            )
+            ))
       )
 )
 )

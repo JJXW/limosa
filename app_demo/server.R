@@ -1387,14 +1387,39 @@ observe({
       statblock$chi <- (statblock$Actual-statblock$Expected)/statblock$Expected
       
       ###END REPEAT###
-      
+     
+       output$randomScore <- renderValueBox({
+        value <- sum((statblock$chi)^2)/nrow(statblock)
+        print(value)
+        if(value < .01){
+        valueBox(
+          value = formatC("Great: No Issue"),
+          subtitle = "Randomization Quality"
+        )
+        } else
+          if(value < 0.1){
+            valueBox(
+              value = formatC("Medium: Review"),
+              subtitle = "Randomization Quality"
+            )
+          }
+        else {
+          valueBox(
+            value = formatC("Low: Likely Issue"),
+            subtitle = "Randomization Quality"
+          )
+          
+        }
+              
+            })
+        
       
       #OUTPUT TOP 10 ERRORS
       tabletop10 = function(stattable){
         l <- order(abs(stattable$chi),decreasing = TRUE)
         sorttable <- stattable[l,]
         sorttable_sub <- sorttable[1:10,1:4]
-        return(datatable(sorttable_sub))
+        return(datatable(sorttable_sub,rownames = FALSE))
         
       }
       
@@ -1403,6 +1428,8 @@ observe({
       
       
     })
+  
+ 
     
   })
   
