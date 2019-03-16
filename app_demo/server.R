@@ -493,7 +493,7 @@ observe({
       #outputting data in the formatted table
       
       #to remove SD values for these vate
-      return(datatable(tablex, container = sketch, rownames = FALSE)%>% formatStyle(columns = c(seq(3,NumSeg*2+1,by=2)),target="cell", backgroundColor = styleEqual(as.matrix(tablex[,c(seq(3,NumSeg*2+1,by=2))]),colorcode)))
+      return(datatable(tablex, container = sketch, options = list(paging = FALSE), rownames = FALSE)%>% formatStyle(columns = c(seq(3,NumSeg*2+1,by=2)),target="cell", backgroundColor = styleEqual(as.matrix(tablex[,c(seq(3,NumSeg*2+1,by=2))]),colorcode)))
     }
     ###END COLOR CODING###
     
@@ -1005,7 +1005,7 @@ observe({
       #outputting data in the formatted table
       
       #to remove SD values for these vate
-      return(datatable(tablex, container = sketch, rownames = FALSE)%>% formatStyle(columns = c(seq(3,NumSeg*2+1,by=2)),target="cell", backgroundColor = styleEqual(as.matrix(tablex[,c(seq(3,NumSeg*2+1,by=2))]),colorcode)))
+      return(datatable(tablex, container = sketch, options = list(paging = FALSE), rownames = FALSE)%>% formatStyle(columns = c(seq(3,NumSeg*2+1,by=2)),target="cell", backgroundColor = styleEqual(as.matrix(tablex[,c(seq(3,NumSeg*2+1,by=2))]),colorcode)))
     }
     ###END COLOR CODING###
     ###END OF THE OUTPUT TABLE FUNCTION ###

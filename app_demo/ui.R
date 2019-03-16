@@ -36,7 +36,12 @@ body <- dashboardBody(
               tags$style(HTML("hr {border-top: 1px solid #000000;}"))
             ),hr()
             ),
-            wellPanel(fluidRow(
+            wellPanel(tags$style(type='text/css',
+                                 ".selectize-dropdown-content{
+                                 height: 1000px;
+                                 width: 1000px;
+                                 background-color: white;
+                                 }"),fluidRow(
               column(3,
                      numericInput("segment_num",
                                  "Number of Segments",
