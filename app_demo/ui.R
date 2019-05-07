@@ -7,6 +7,7 @@ sidebar <- dashboardSidebar(
     menuItem("Data Upload & Summary", tabName = "dashboard"),
     menuItem("Auto Segementation", tabName = "analysis"),
     menuItem("Manual Segmentation", tabName = "manual"),
+    menuItem("Tree Classification", tabName = "tree"),
     menuItem("Question Randomization", tabName = "dataquality")
   )
 )
@@ -263,7 +264,34 @@ body <- dashboardBody(
             column(6,
               wellPanel(plotOutput("normal"))
             ))
-      )
+      ),
+ 
+    tabItem("tree", 
+            fluidRow(titlePanel("Tree Based Classification"),
+                     mainPanel("This tool allows you to implement tree based classification.")),
+            wellPanel(fluidRow(
+              column(3,
+                     selectInput("tree_target_var",
+                                 "Select variable for tree to optimize groupings on.",
+                                 c('',colnames(survey_data_default)),
+                                 multiple = F)
+                     
+              ),
+              column(3,
+                     selectInput("tree_split_var",
+                                 "Select variables for tree to use as possible splits.",
+                                 c('',colnames(survey_data_default)),
+                                 selected = NULL,
+                                 multiple = T)
+              )
+            )
+          ),
+          fluidRow(
+            column(2,actionButton("UseTheseVars_tree", "Choose These Variables & Run Tree Classification"))
+          ),
+          fluidRow((plotOutput("tree_plot")))
+          
+    )
 )
 )
 

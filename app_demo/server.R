@@ -1433,5 +1433,19 @@ observe({
     
   })
   
+  tree_model <- eventReactive(input$UseTheseVars_tree, {
+    
+    f <- paste0(input$tree_target_var, "~", paste(input$tree_split_var, collapse=" + "))
+    
+    model <- rpart(f, survey_data_reactive())
+    
+  })
 
+  output$tree_plot <- renderPlot({
+    
+    rpart.plot(tree_model())
+    
+  })
+  
+  
 }

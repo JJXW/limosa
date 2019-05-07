@@ -9,5 +9,13 @@ library(klaR)
 library(dplyr)
 require(plyr)
 
+library(rpart)
+library(visTree)
+library(rattle)
+library(party)		
+library(caret)
+library(rpart.plot)	
+library(partykit)
+
 
 survey_data_default <- read.csv('intellisurvey_demo.csv')
