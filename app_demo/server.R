@@ -1433,6 +1433,16 @@ observe({
     
   })
   
+###TREE###
+  
+  observe({values <- colnames(survey_data_reactive())
+  
+  #MAKING SURE VARIABLES UPDATE ACROSS SELECTION VARIABLES#
+  #automatic segmentation
+  updateSelectInput(session,"tree_target_var",label = "Select variable for tree to optimize groupings on.",choices = c('',values))
+  updateSelectInput(session,"tree_split_var",label = "Select variables for tree to use as possible splits.",choices = c('',values))
+  })
+  
   tree_model <- eventReactive(input$UseTheseVars_tree, {
     
     f <- paste0(input$tree_target_var, "~", paste(input$tree_split_var, collapse=" + "))
