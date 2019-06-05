@@ -1272,6 +1272,8 @@ observe({
         #creating the masterframe, note the rows is capped at 10000 for now (do not know how to predict exact rows)
         masterframe = as.data.frame(matrix(nrow = 10000, ncol = (9 + 2*unique_outcomes)))
         colnames = c("Leaf","n","yval",as.character(unique(test_data[,target_var])[order(unique(test_data[,target_var]))]),"w","x","y","z","rule",paste("avg",unique(test_data[,target_var])[order(unique(test_data[,target_var]))],sep="_"),"Dif_Score")
+        colnames[colnames==""] = "Blank"
+        colnames[colnames=="avg_"] = "avg_Blank"
         colnames(masterframe) = colnames
         var_comb_frame = combn(vars,min(4, length(vars)))
         
@@ -1293,8 +1295,10 @@ observe({
             #catching models that do not yield leaves
           }
           else {
-            modframe = model$frame[model$frame[,1]=="<leaf>",]
-            modframe2 = model$frame$yval2[model$frame[,1]=="<leaf>",]
+            modframe_a = model$frame[order(as.numeric(row.names(model$frame))),]
+            modframe = modframe_a[modframe_a[,1]=="<leaf>",]
+            modframe2 = model$frame$yval2[order(as.numeric(row.names(model$frame))),]
+            modframe2 = modframe2[modframe_a[,1]=="<leaf>",]
             numleafs = nrow(modframe)
             
             #setting masterframe to values in model frame
@@ -1303,32 +1307,43 @@ observe({
             #yval
             masterframe[j:(j+numleafs-1),3] = modframe[,5]
             #yval2...
-            masterframe[j:(j+numleafs-1),4:(4+unique_outcomes-1)] = modframe2[,(2+unique_outcomes):(1+2*unique_outcomes)]
+            masterframe[j:(j+numleafs-1),4:(4+unique_outcomes-1)] = round(modframe2[,(2+unique_outcomes):(1+2*unique_outcomes)],2)
             #vars used
             masterframe[j:(j+numleafs-1),(5+unique_outcomes-1)] = w
             masterframe[j:(j+numleafs-1),(6+unique_outcomes-1)] = x
             masterframe[j:(j+numleafs-1),(7+unique_outcomes-1)] = y
             masterframe[j:(j+numleafs-1),(8+unique_outcomes-1)] = z
             #rules
-            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = apply(rpart.rules(model),1,FUN = paste, collapse = " ")
+            rules = rpart.rules(model)
+            temprule = rpart.rules(model, nn=T)
+            rules = rules[match(temprule$nn,sort(as.numeric(temprule$nn),decreasing=F)),]
+            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = apply(rules,1,FUN = paste, collapse = " ")
             masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(w\\)",w)
             masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(x\\)",x)
             masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(y\\)",y)
             masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(z\\)",z)
             
             #overall avg
-            masterframe[j:(j+numleafs-1),(10+unique_outcomes-1):(9+2*unique_outcomes-1)] = t(replicate(numleafs,model$frame$yval2[1,(2+unique_outcomes):(1+2*unique_outcomes)]))
-    
+            masterframe[j:(j+numleafs-1),(10+unique_outcomes-1):(9+2*unique_outcomes-1)] = round(t(replicate(numleafs,model$frame$yval2[1,(2+unique_outcomes):(1+2*unique_outcomes)])),2)
+            
+            #difference vs average
+            #JON TO ASSESS AND CHANGE AS NEEDED
+            masterframe[j:(j+numleafs-1),(10+2*unique_outcomes-1)] = round(apply(abs(masterframe[j:(j+numleafs-1),4:(4+unique_outcomes-1)] - masterframe[j:(j+numleafs-1),(10+unique_outcomes-1):(9+2*unique_outcomes-1)]),1,sum),2)
+            
             j = j + numleafs
             
           }
         }
+        
+        
         #end if
       } else {
         
         ###NUMERIC###
         masterframe = as.data.frame(matrix(nrow = 10000, ncol = (10)))
         colnames = c("Leaf","n","yval","w","x","y","z","rule","avg_yval","Dif_Score")
+        colnames[colnames==""] = "Blank"
+        colnames[colnames=="avg_"] = "avg_Blank"
         colnames(masterframe) = colnames
         var_comb_frame = combn(vars,min(4, length(vars)))
         
@@ -1356,7 +1371,7 @@ observe({
             #leaf and n
             masterframe[j:(j+numleafs-1),1:2] = modframe[,1:2]
             #yval
-            masterframe[j:(j+numleafs-1),3] = modframe[,5]
+            masterframe[j:(j+numleafs-1),3] = round(modframe[,5],2)
             #vars used
             masterframe[j:(j+numleafs-1),(4)] = w
             masterframe[j:(j+numleafs-1),(5)] = x
@@ -1370,8 +1385,11 @@ observe({
             masterframe[j:(j+numleafs-1),(8)] = str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(z\\)",z)
             
             #overall avg
-            masterframe[j:(j+numleafs-1),(9)] = model$frame[1,5]
+            masterframe[j:(j+numleafs-1),(9)] = round(model$frame[1,5],2)
             
+            #difference from avg
+            #JON TO ASSESS AND CHANGE AS NEEDED
+            masterframe[j:(j+numleafs-1),(10)] = round(masterframe[j:(j+numleafs-1),3] - masterframe[j:(j+numleafs-1),(9)],2)
             
             
             j = j + numleafs
