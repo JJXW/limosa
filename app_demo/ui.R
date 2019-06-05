@@ -7,8 +7,8 @@ sidebar <- dashboardSidebar(
     menuItem("Data Upload & Summary", tabName = "dashboard"),
     menuItem("Auto Segementation", tabName = "analysis"),
     menuItem("Manual Segmentation", tabName = "manual"),
-    menuItem("Question Randomization", tabName = "dataquality"),
-    menuItem("Visualize", tabName = "visual")
+    menuItem("Tree Classification", tabName = "tree"),
+    menuItem("Question Randomization", tabName = "dataquality")
   )
 )
 
@@ -58,7 +58,7 @@ body <- dashboardBody(
                                  "Variable 1: Select",
                                  c('',colnames(survey_data_default)),
                                  multiple = F)
-
+                     
               ),
             column(3,
                      selectInput("segvar2",
@@ -66,7 +66,7 @@ body <- dashboardBody(
                                  c('',colnames(survey_data_default)),
                                  selected = NULL,
                                  multiple = F)
-              ),
+              ), 
             column(3,
                     selectInput("segvar3",
                                 "Variable 3: Select",
@@ -82,7 +82,7 @@ body <- dashboardBody(
                                multiple = F)
             )
             ),
-
+            
             fluidRow(
               column(3,selectInput('segvar1_type', 'Variable 1: Type',choices = c('','categorical','numeric'),multiple = F)
               ),
@@ -93,7 +93,7 @@ body <- dashboardBody(
               column(3,selectInput('segvar4_type', 'Variable 4: Type',choices = c('','categorical','numeric'),multiple = F)
               )
             ),
-
+            
     #THIS WAS CODE TO LET SOMEONE ADD A VARIABLE TO THE OUTPUT TABLE THAT IS NOT INCLUDED IN THE ACTUAL SEGMENTATION
     #THIS CAN BE A LATER FEATURE, HAVE NOT ADDED IT TO THE SERVER CODE
             # fluidRow(
@@ -106,7 +106,7 @@ body <- dashboardBody(
             #   column(3,selectInput('segvar4_purp', 'Variable 4: Purpose',choices = c('','targeting','outcome'),multiple = F)
             #   )
             # ),
-
+            
             fluidRow(
               column(2,actionButton("UseTheseVars", "Choose These Variables & Run Segmentation"))
               )
@@ -124,8 +124,8 @@ body <- dashboardBody(
     ),
     fluidRow(downloadButton(outputId = "down", label = "Download Analysis"))
     ),
-
- ###MANUAL SEGMENTATION###
+            
+ ###MANUAL SEGMENTATION###          
  tabItem("manual",
          fluidRow(titlePanel("Manual Segmentation Tool"),
                   mainPanel("This tool allows you to segment your data manually based on ranges of variables")),
@@ -133,7 +133,7 @@ body <- dashboardBody(
            tags$style(HTML("hr {border-top: 1px solid #000000;}"))
          ),hr()
          ),
-         wellPanel(fluidRow(
+         wellPanel(fluidRow(   
            column(2,titlePanel("Variable")),
            column(2,titlePanel("Type")),
            column(2,titlePanel("Segment 1")),
@@ -155,9 +155,9 @@ body <- dashboardBody(
            column(2,selectInput("var1_seg2","Pick Range",choices = c("nothing selected"),multiple = T)),
            column(2,selectInput("var1_seg3","Pick Range",choices = c("nothing selected"),multiple = T)),
            column(2,selectInput("var1_seg4","Pick Range",choices = c("nothing selected"),multiple = T))
-
+           
          ),
-
+         
          fluidRow(
            column(2,selectInput("segment_var_2",
                        "Variable 2:",
@@ -203,9 +203,9 @@ body <- dashboardBody(
            column(2,selectInput("var4_seg3","Pick Range",choices = colnames(survey_data_default),multiple = T)),
            column(2,selectInput("var4_seg4","Pick Range",choices = colnames(survey_data_default),multiple = T))
          )),
-
+         
          ##END OF SELECTION PANE#
-
+         
          fluidRow(
            column(2,actionButton("UseTheseVars_man", "Choose These Variables & Run Segmentation"))
          ),
@@ -222,13 +222,13 @@ body <- dashboardBody(
          ),
          fluidRow(downloadButton(outputId = "down_man", label = "Download Analysis"))
 
-
+        
          ###here ends the TAB ITEM MANUAL###
  ),
-
-
-
-
+ 
+ 
+ 
+ 
     tabItem("dataquality",
             fluidRow(titlePanel("Data Randomization Check"),
             mainPanel("This tool allows you to upload survey responses in choice order, meaning each observation shows if a respondent selected A, B, C, etc. and it does not correspond to answer values. This is to test the quality of your survey writing and randomization.")
@@ -239,17 +239,17 @@ body <- dashboardBody(
             fluidRow(
               column(6,
               fileInput(inputId = "inFile",label = "CSV of Your Survey Data in Choice Order")),
-
+              
                      valueBoxOutput("randomScore")
             ),
             fluidRow(
               column(6,actionButton("go", "Go!"))
             ),
-
+            
             fluidRow(column(12,"The Top 10 Answer Choices Demonstrating Non Random Behavior", align = "center")
-
+                     
             ),
-            fluidRow(column(12,
+            fluidRow(column(12, 
                             wellPanel(dataTableOutput("testable"))
             )
             ),
@@ -265,8 +265,33 @@ body <- dashboardBody(
               wellPanel(plotOutput("normal"))
             ))
       ),
-    tabItem("visual",
+ 
+    tabItem("tree", 
+            fluidRow(titlePanel("Tree Based Classification"),
+                     mainPanel("This tool allows you to implement tree based classification.")),
+            wellPanel(fluidRow(
+              column(3,
+                     selectInput("tree_target_var",
+                                 "Select variable for tree to optimize groupings on.",
+                                 c('',colnames(survey_data_default)),
+                                 multiple = F)
+                     
+              ),
+              column(3,
+                     selectInput("tree_split_var",
+                                 "Select variables for tree to use as possible splits.",
+                                 c('',colnames(survey_data_default)),
+                                 selected = NULL,
+                                 multiple = T)
+              )
             )
+          ),
+          fluidRow(
+            column(2,actionButton("UseTheseVars_tree", "Choose These Variables & Run Tree Classification"))
+          ),
+          fluidRow((plotOutput("tree_plot")))
+          
+    )
 )
 )
 
@@ -275,3 +300,4 @@ ui <- dashboardPage(
   sidebar,
   body
 )
+
