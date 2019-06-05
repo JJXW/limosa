@@ -654,7 +654,7 @@ observe({
 ############################ BREAK FOR NEXT SECTION ########################################  
   
 #### MANUAL SEGMENTATION STUFF ####
-  ###EVERYTHING FOR AUTOSEGMENTATION IS ESSENTIALLY NESTED WITHIN THIS LARGER REACTIVE FUNCTION###
+  ###EVERYTHING FOR MANUAL SEG IS ESSENTIALLY NESTED WITHIN THIS LARGER REACTIVE FUNCTION###
   framex_man <- eventReactive(input$UseTheseVars_man,{
     
     #create strings of the important inputs
@@ -1250,190 +1250,8 @@ observe({
   output$segtable_man <- renderDataTable({framex_man()
   })  
   
-################ BREAK FOR NEXT PIECE OF CODE#############
-####DATA QUALITY CHECK####
-  Tablefx = function (QualData){
-    
-    builder <- as.data.frame(apply(QualData[,2:ncol(QualData)],MARGIN = 2, FUN = function (x) length(unique(x))))
-    builder$Question <- rownames(builder)
-    
-    #function that takes a set of vlaues and appends it to a list
-    builder2 <- as.data.frame(rep(row.names(builder),builder[,1]))
-    
-    
-    numbuild = function(listx){
-      x=c()
-      for(i in 1:nrow(listx)){
-        y=seq(1, listx[i,1])
-        x=append(x,y)
-      }
-      return(x)
-    }
-    
-    output = as.data.frame(builder2[,1],ncol = 3)
-    output[,2] <- as.array((numbuild(builder)))
-    colnames(output)<- c("Question","Choice")
-    
-    #adding aggregation count
-    output_join <- left_join(output,builder,by="Question")
-    colnames(output_join)[3] <- "Expected"
-    output_join$Expected = round(nrow(QualData)/output_join$Expected,2)
-    
-    indexm = function(quest, vals) {
-      return(sum(QualData[,match(quest,colnames(QualData))] == vals)) 
-    }
-    
-    output_join$Actual <- mapply(indexm,output_join$Question,vals=output_join$Choice)
-    output_join$Counter <- c(1: nrow(output_join))
-    return(output_join)
-  }
-  
-  help(left_join)
-  
-  observeEvent(input$go,{
-    
-    output$expectation <- renderPlot({
-      
-      #Count how many answer choices for each question
-      ##Note: assumes that at least one of each answer choice was selected (to modify that assumption in the future)
-      
-      #Receiving the input file
-      inFile <- input$inFile
-      
-      if(is.null(inFile))
-        return(NULL)
-      
-      QData <- read.csv(inFile$datapath)
-      
-      #running
-      output_table <- Tablefx(QData)
-      
-      #FUNCTION TO OUTPUT PLOT
-      answer_freq = function(outputtable){
-        return(ggplot(outputtable, aes(x=Counter,y=Expected))      +
-                 geom_point() +
-                 geom_point(aes(y=Actual, color="disp")) +
-                 ylab(label = "Distribution") +
-                 xlab(label = "All Questions And Answer Choices")
-        )
-      }
-      
-      #running
-      answer_freq(output_table)
-    })
-    
-    
-    
-    output$normal <- renderPlot({
-      
-      
-      #Receiving the input file
-      inFile <- input$inFile
-      
-      if(is.null(inFile))
-        return(NULL)
-      
-      QData <- read.csv(inFile$datapath)
-      
-      #running
-      output_table <- Tablefx(QData)
-      ###END REPEAT###
-      
-      
-      #STATISTICAL TESTING??
-      statblock <- output_table
-      statblock$chi <- (statblock$Actual-statblock$Expected)/statblock$Expected
-      
-      #unused so far#
-      #statresults <- shapiro.test(statblock$chi)  
-      
-      
-      #NORMAL ERROR PLOT
-      normalhist = function(stattable){
-        return(ggplot(stattable, aes(x = chi)) + 
-                 geom_histogram(aes(y =..density..),
-                                breaks = seq(min(stattable$chi), max(stattable$chi), by = (max(stattable$chi)-min(stattable$chi))/50),
-                                colour = "black",
-                                fill = "white") +
-                 stat_function(fun = dnorm, args = list(mean = mean(stattable$chi), sd = sd(stattable$chi)))
-        )
-      }
-      
-      #running
-      normalhist(statblock)
-      
-    })
-    
-    
-    output$testable <- renderDataTable({
-      ####REPEAT###
-      #Count how many answer choices for each question
-      ##Note: assumes that at least one of each answer choice was selected (to modify that assumption in the future)
-      
-      #Receiving the input file
-      inFile <- input$inFile
-      
-      if(is.null(inFile))
-        return(NULL)
-      
-      QData <- read.csv(inFile$datapath)
-      
-      #running
-      output_table <- Tablefx(QData)
-      
-      
-      #STATISTICAL TESTING??
-      statblock <- output_table
-      statblock$chi <- (statblock$Actual-statblock$Expected)/statblock$Expected
-      
-      ###END REPEAT###
-     
-       output$randomScore <- renderValueBox({
-        value <- sum((statblock$chi)^2)/nrow(statblock)
-        print(value)
-        if(value < .01){
-        valueBox(
-          value = formatC("Great: No Issue"),
-          subtitle = "Randomization Quality"
-        )
-        } else
-          if(value < 0.1){
-            valueBox(
-              value = formatC("Medium: Review"),
-              subtitle = "Randomization Quality"
-            )
-          }
-        else {
-          valueBox(
-            value = formatC("Low: Likely Issue"),
-            subtitle = "Randomization Quality"
-          )
-          
-        }
-              
-            })
-        
-      
-      #OUTPUT TOP 10 ERRORS
-      tabletop10 = function(stattable){
-        l <- order(abs(stattable$chi),decreasing = TRUE)
-        sorttable <- stattable[l,]
-        sorttable_sub <- sorttable[1:10,1:4]
-        return(datatable(sorttable_sub,rownames = FALSE))
-        
-      }
-      
-      #running
-      tabletop10(statblock)
-      
-      
-    })
-  
- 
-    
-  })
-  
-###TREE###
+
+###TREE CLASSIFICATION###
   
   observe({values <- colnames(survey_data_reactive())
   
@@ -1445,17 +1263,143 @@ observe({
   
   tree_model <- eventReactive(input$UseTheseVars_tree, {
     
-    f <- paste0(input$tree_target_var, "~", paste(input$tree_split_var, collapse=" + "))
+    masterframeFX = function(test_data, vars, target_var, target_var_type){
+      
+      if(target_var_type == "categorical"){
+        ###CATEGORICAL###
+        
+        unique_outcomes = length(unique(test_data[,target_var]))
+        #creating the masterframe, note the rows is capped at 10000 for now (do not know how to predict exact rows)
+        masterframe = as.data.frame(matrix(nrow = 10000, ncol = (9 + 2*unique_outcomes)))
+        colnames = c("Leaf","n","yval",as.character(unique(test_data[,target_var])[order(unique(test_data[,target_var]))]),"w","x","y","z","rule",paste("avg",unique(test_data[,target_var])[order(unique(test_data[,target_var]))],sep="_"),"Dif_Score")
+        colnames(masterframe) = colnames
+        var_comb_frame = combn(vars,min(4, length(vars)))
+        
+        
+        j = 1
+        i=1
+        for(i in 1:ncol(var_comb_frame)){
+          #assigning variables
+          w = var_comb_frame[1,i]
+          x = var_comb_frame[2,i]
+          y = var_comb_frame[3,i]
+          z = var_comb_frame[4,i]
+          
+          #running the tree
+          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+          
+          #choosing only the leaves
+          if(nrow(model$frame)<=1){
+            #catching models that do not yield leaves
+          }
+          else {
+            modframe = model$frame[model$frame[,1]=="<leaf>",]
+            modframe2 = model$frame$yval2[model$frame[,1]=="<leaf>",]
+            numleafs = nrow(modframe)
+            
+            #setting masterframe to values in model frame
+            #leaf and n
+            masterframe[j:(j+numleafs-1),1:2] = modframe[,1:2]
+            #yval
+            masterframe[j:(j+numleafs-1),3] = modframe[,5]
+            #yval2...
+            masterframe[j:(j+numleafs-1),4:(4+unique_outcomes-1)] = modframe2[,(2+unique_outcomes):(1+2*unique_outcomes)]
+            #vars used
+            masterframe[j:(j+numleafs-1),(5+unique_outcomes-1)] = w
+            masterframe[j:(j+numleafs-1),(6+unique_outcomes-1)] = x
+            masterframe[j:(j+numleafs-1),(7+unique_outcomes-1)] = y
+            masterframe[j:(j+numleafs-1),(8+unique_outcomes-1)] = z
+            #rules
+            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = apply(rpart.rules(model),1,FUN = paste, collapse = " ")
+            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(w\\)",w)
+            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(x\\)",x)
+            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(y\\)",y)
+            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(z\\)",z)
+            
+            #overall avg
+            masterframe[j:(j+numleafs-1),(10+unique_outcomes-1):(9+2*unique_outcomes-1)] = t(replicate(numleafs,model$frame$yval2[1,(2+unique_outcomes):(1+2*unique_outcomes)]))
     
-    model <- rpart(f, survey_data_reactive())
-    
+            j = j + numleafs
+            
+          }
+        }
+        #end if
+      } else {
+        
+        ###NUMERIC###
+        masterframe = as.data.frame(matrix(nrow = 10000, ncol = (10)))
+        colnames = c("Leaf","n","yval","w","x","y","z","rule","avg_yval","Dif_Score")
+        colnames(masterframe) = colnames
+        var_comb_frame = combn(vars,min(4, length(vars)))
+        
+        j = 1
+        i=1
+        for(i in 1:ncol(var_comb_frame)){
+          #assigning variables
+          w = var_comb_frame[1,i]
+          x = var_comb_frame[2,i]
+          y = var_comb_frame[3,i]
+          z = var_comb_frame[4,i]
+          
+          #running the tree
+          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+          
+          #choosing only the leaves
+          if(nrow(model$frame)<=1){
+            #catching models that do not yield leaves
+          }
+          else {
+            modframe = model$frame[model$frame[,1]=="<leaf>",]
+            numleafs = nrow(modframe)
+            
+            #setting masterframe to values in model frame
+            #leaf and n
+            masterframe[j:(j+numleafs-1),1:2] = modframe[,1:2]
+            #yval
+            masterframe[j:(j+numleafs-1),3] = modframe[,5]
+            #vars used
+            masterframe[j:(j+numleafs-1),(4)] = w
+            masterframe[j:(j+numleafs-1),(5)] = x
+            masterframe[j:(j+numleafs-1),(6)] = y
+            masterframe[j:(j+numleafs-1),(7)] = z
+            #rules
+            masterframe[j:(j+numleafs-1),(8)] = apply(rpart.rules(model),1,FUN = paste, collapse = " ")
+            masterframe[j:(j+numleafs-1),(8)] = str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(w\\)",w)
+            masterframe[j:(j+numleafs-1),(8)] = str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(x\\)",x)
+            masterframe[j:(j+numleafs-1),(8)] = str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(y\\)",y)
+            masterframe[j:(j+numleafs-1),(8)] = str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(z\\)",z)
+            
+            #overall avg
+            masterframe[j:(j+numleafs-1),(9)] = model$frame[1,5]
+            
+            
+            
+            j = j + numleafs
+            
+          }
+        }
+        
+      }
+      
+      ##end if/else
+      return(masterframe)
+    }
+  
+    return(masterframeFX(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$tree_target_var_type))
+  })
+  
+  output$tableTREE <- DT::renderDataTable({
+    DT::datatable(data = tree_model(),
+                  options = list(scrollX = T))
   })
 
-  output$tree_plot <- renderPlot({
-    
-    rpart.plot(tree_model())
-    
-  })
+
+  
+  ####FOR JON TO CREATE CHART###
+  # output$tree_plot <- renderPlot({
+  #   
+  #   rpart.plot(tree_model())
+  # })
   
   
 }

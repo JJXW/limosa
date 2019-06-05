@@ -16,6 +16,7 @@ library(party)
 library(caret)
 library(rpart.plot)	
 library(partykit)
+library(stringr)
 
 
 survey_data_default <- read.csv('intellisurvey_demo.csv')
