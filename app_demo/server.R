@@ -1295,29 +1295,39 @@ observe({
             #catching models that do not yield leaves
           }
           else {
-            modframe_a = model$frame[order(as.numeric(row.names(model$frame))),]
-            modframe = modframe_a[modframe_a[,1]=="<leaf>",]
-            modframe2 = model$frame$yval2[order(as.numeric(row.names(model$frame))),]
-            modframe2 = modframe2[modframe_a[,1]=="<leaf>",]
-            numleafs = nrow(modframe)
+            modframe_sort = model$frame[order(as.numeric(row.names(model$frame))),]
+            modframe_sort_leafonly = modframe_sort[modframe_sort[,1]=="<leaf>",]
+            modframe_yval2s = model$frame$yval2[order(as.numeric(row.names(model$frame))),]
+            modframe_yval2s = modframe_yval2s[modframe_sort[,1]=="<leaf>",]
+            numleafs = nrow(modframe_sort_leafonly)
             
             #setting masterframe to values in model frame
             #leaf and n
-            masterframe[j:(j+numleafs-1),1:2] = modframe[,1:2]
+            masterframe[j:(j+numleafs-1),1:2] = modframe_sort_leafonly[,1:2]
             #yval
-            masterframe[j:(j+numleafs-1),3] = modframe[,5]
+            masterframe[j:(j+numleafs-1),3] = modframe_sort_leafonly[,5]
             #yval2...
-            masterframe[j:(j+numleafs-1),4:(4+unique_outcomes-1)] = round(modframe2[,(2+unique_outcomes):(1+2*unique_outcomes)],2)
+            masterframe[j:(j+numleafs-1),4:(4+unique_outcomes-1)] = round(modframe_yval2s[,(2+unique_outcomes):(1+2*unique_outcomes)],2)
+            print("here are the yvals")
+            print(round(modframe_yval2s[,(2+unique_outcomes):(1+2*unique_outcomes)],2))
             #vars used
             masterframe[j:(j+numleafs-1),(5+unique_outcomes-1)] = w
             masterframe[j:(j+numleafs-1),(6+unique_outcomes-1)] = x
             masterframe[j:(j+numleafs-1),(7+unique_outcomes-1)] = y
             masterframe[j:(j+numleafs-1),(8+unique_outcomes-1)] = z
             #rules
-            rules = rpart.rules(model)
+            ##THIS IS THE ISSUE HERE WITH ORDER IN THE RULES
+            mod_rules = rpart.rules(model)
             temprule = rpart.rules(model, nn=T)
-            rules = rules[match(temprule$nn,sort(as.numeric(temprule$nn),decreasing=F)),]
-            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = apply(rules,1,FUN = paste, collapse = " ")
+            mod_rules2 = mod_rules[match(sort(as.numeric(temprule$nn),decreasing=F),temprule$nn),]
+            print("here are the rules")
+            print(rpart.rules(model))
+            print(mod_rules2)
+            print(temprule)
+            #printing the match
+            print(match(temprule$nn,sort(as.numeric(temprule$nn),decreasing=F)))
+            
+            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = apply(mod_rules2,1,FUN = paste, collapse = " ")
             masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(w\\)",w)
             masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(x\\)",x)
             masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(y\\)",y)
@@ -1334,6 +1344,9 @@ observe({
             
           }
         }
+        
+        #removing duplicates from the model (e.g., two different groups of 4 vars give the same outputted best tree)
+        masterframe = masterframe[!duplicated(masterframe$rule),]
         
         
         #end if
@@ -1396,6 +1409,10 @@ observe({
             
           }
         }
+      
+        #removing duplicates  
+      masterframe = masterframe[!duplicated(masterframe$rule),]
+        
         
       }
       
