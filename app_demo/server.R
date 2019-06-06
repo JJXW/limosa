@@ -1308,26 +1308,18 @@ observe({
             masterframe[j:(j+numleafs-1),3] = modframe_sort_leafonly[,5]
             #yval2...
             masterframe[j:(j+numleafs-1),4:(4+unique_outcomes-1)] = round(modframe_yval2s[,(2+unique_outcomes):(1+2*unique_outcomes)],2)
-            print("here are the yvals")
-            print(round(modframe_yval2s[,(2+unique_outcomes):(1+2*unique_outcomes)],2))
+            
             #vars used
             masterframe[j:(j+numleafs-1),(5+unique_outcomes-1)] = w
             masterframe[j:(j+numleafs-1),(6+unique_outcomes-1)] = x
             masterframe[j:(j+numleafs-1),(7+unique_outcomes-1)] = y
             masterframe[j:(j+numleafs-1),(8+unique_outcomes-1)] = z
             #rules
-            ##THIS IS THE ISSUE HERE WITH ORDER IN THE RULES
             mod_rules = rpart.rules(model)
             temprule = rpart.rules(model, nn=T)
             mod_rules2 = mod_rules[match(sort(as.numeric(temprule$nn),decreasing=F),temprule$nn),]
-            print("here are the rules")
-            print(rpart.rules(model))
-            print(mod_rules2)
-            print(temprule)
-            #printing the match
-            print(match(temprule$nn,sort(as.numeric(temprule$nn),decreasing=F)))
             
-            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = apply(mod_rules2,1,FUN = paste, collapse = " ")
+            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = trimws(gsub("\\s+"," ",apply(mod_rules2,1,FUN = paste, collapse = " ")))
             masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(w\\)",w)
             masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(x\\)",x)
             masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(y\\)",y)
@@ -1347,6 +1339,7 @@ observe({
         
         #removing duplicates from the model (e.g., two different groups of 4 vars give the same outputted best tree)
         masterframe = masterframe[!duplicated(masterframe$rule),]
+        print(unique(masterframe$rule))
         
         
         #end if
@@ -1391,7 +1384,8 @@ observe({
             masterframe[j:(j+numleafs-1),(6)] = y
             masterframe[j:(j+numleafs-1),(7)] = z
             #rules
-            masterframe[j:(j+numleafs-1),(8)] = apply(rpart.rules(model),1,FUN = paste, collapse = " ")
+           
+            masterframe[j:(j+numleafs-1),(8)] = trimws(gsub("\\s+"," ",apply(rpart.rules(model),1,FUN = paste, collapse = " ")))
             masterframe[j:(j+numleafs-1),(8)] = str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(w\\)",w)
             masterframe[j:(j+numleafs-1),(8)] = str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(x\\)",x)
             masterframe[j:(j+numleafs-1),(8)] = str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(y\\)",y)
