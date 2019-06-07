@@ -1283,12 +1283,21 @@ observe({
         for(i in 1:ncol(var_comb_frame)){
           #assigning variables
           w = var_comb_frame[1,i]
-          x = var_comb_frame[2,i]
-          y = var_comb_frame[3,i]
-          z = var_comb_frame[4,i]
+          #allowing for less than 4 variables
+          tryCatch({x = var_comb_frame[2,i]},error = function(err){})
+          tryCatch({y = var_comb_frame[3,i]},error = function(err){})
+          tryCatch({z = var_comb_frame[4,i]},error = function(err){})
           
           #running the tree
+          if(length(vars)>3){
           model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+          } else if (length(vars)>2){
+            model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+          } else if (length(vars)>1){
+            model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+          } else {
+            model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+          }
           
           #choosing only the leaves
           if(nrow(model$frame)<=1){
@@ -1311,9 +1320,9 @@ observe({
             
             #vars used
             masterframe[j:(j+numleafs-1),(5+unique_outcomes-1)] = w
-            masterframe[j:(j+numleafs-1),(6+unique_outcomes-1)] = x
-            masterframe[j:(j+numleafs-1),(7+unique_outcomes-1)] = y
-            masterframe[j:(j+numleafs-1),(8+unique_outcomes-1)] = z
+            masterframe[j:(j+numleafs-1),(6+unique_outcomes-1)] = tryCatch({x},error = function(err){return("N/A")})
+            masterframe[j:(j+numleafs-1),(7+unique_outcomes-1)] = tryCatch({y},error = function(err){return("N/A")})
+            masterframe[j:(j+numleafs-1),(8+unique_outcomes-1)] = tryCatch({z},error = function(err){return("N/A")})
             #rules
             mod_rules = rpart.rules(model)
             temprule = rpart.rules(model, nn=T)
@@ -1321,9 +1330,9 @@ observe({
             
             masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = trimws(gsub("\\s+"," ",apply(mod_rules2,1,FUN = paste, collapse = " ")))
             masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(w\\)",w)
-            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(x\\)",x)
-            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(y\\)",y)
-            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(z\\)",z)
+            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(x\\)",x)},error = function(err){return(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)])})
+            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(y\\)",y)},error = function(err){return(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)])})
+            masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(z\\)",z)},error = function(err){return(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)])})
             
             #overall avg
             masterframe[j:(j+numleafs-1),(10+unique_outcomes-1):(9+2*unique_outcomes-1)] = round(t(replicate(numleafs,model$frame$yval2[1,(2+unique_outcomes):(1+2*unique_outcomes)])),2)
@@ -1358,12 +1367,21 @@ observe({
         for(i in 1:ncol(var_comb_frame)){
           #assigning variables
           w = var_comb_frame[1,i]
-          x = var_comb_frame[2,i]
-          y = var_comb_frame[3,i]
-          z = var_comb_frame[4,i]
+          #allowing for less than 4 variables
+          tryCatch({x = var_comb_frame[2,i]},error = function(err){})
+          tryCatch({y = var_comb_frame[3,i]},error = function(err){})
+          tryCatch({z = var_comb_frame[4,i]},error = function(err){})
           
           #running the tree
-          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+          if(length(vars)>3){
+            model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+          } else if (length(vars)>2){
+            model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+          } else if (length(vars)>1){
+            model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+          } else {
+            model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+          }
           
           #choosing only the leaves
           if(nrow(model$frame)<=1){
@@ -1378,18 +1396,20 @@ observe({
             masterframe[j:(j+numleafs-1),1:2] = modframe[,1:2]
             #yval
             masterframe[j:(j+numleafs-1),3] = round(modframe[,5],2)
+            
             #vars used
             masterframe[j:(j+numleafs-1),(4)] = w
-            masterframe[j:(j+numleafs-1),(5)] = x
-            masterframe[j:(j+numleafs-1),(6)] = y
-            masterframe[j:(j+numleafs-1),(7)] = z
+            masterframe[j:(j+numleafs-1),(5)] = tryCatch({x},error = function(err){return("N/A")})
+            masterframe[j:(j+numleafs-1),(6)] = tryCatch({y},error = function(err){return("N/A")})
+            masterframe[j:(j+numleafs-1),(7)] = tryCatch({z},error = function(err){return("N/A")})
+            
+            
             #rules
-           
             masterframe[j:(j+numleafs-1),(8)] = trimws(gsub("\\s+"," ",apply(rpart.rules(model),1,FUN = paste, collapse = " ")))
-            masterframe[j:(j+numleafs-1),(8)] = str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(w\\)",w)
-            masterframe[j:(j+numleafs-1),(8)] = str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(x\\)",x)
-            masterframe[j:(j+numleafs-1),(8)] = str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(y\\)",y)
-            masterframe[j:(j+numleafs-1),(8)] = str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(z\\)",z)
+            masterframe[j:(j+numleafs-1),(8)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(w\\)",w)},error = function(err){return(masterframe[j:(j+numleafs-1),(8)])})
+            masterframe[j:(j+numleafs-1),(8)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(x\\)",x)},error = function(err){return(masterframe[j:(j+numleafs-1),(8)])})
+            masterframe[j:(j+numleafs-1),(8)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(y\\)",y)},error = function(err){return(masterframe[j:(j+numleafs-1),(8)])})
+            masterframe[j:(j+numleafs-1),(8)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(z\\)",z)},error = function(err){return(masterframe[j:(j+numleafs-1),(8)])})
             
             #overall avg
             masterframe[j:(j+numleafs-1),(9)] = round(model$frame[1,5],2)
