@@ -1,13 +1,13 @@
 header <- dashboardHeader(
-  title = 'SpliceAI Demo'
+  title = 'FolsomAnalyics Beta'
 )
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Data Upload & Summary", tabName = "dashboard"),
-    menuItem("Auto Segementation", tabName = "analysis"),
-    menuItem("Manual Segmentation", tabName = "manual"),
-    menuItem("Tree Classification", tabName = "tree")
+    menuItem("Auto-Segment", tabName = "analysis"),
+    menuItem("Segment Storyliner", tabName = "manual"),
+    menuItem("Prediction Finder", tabName = "tree")
   )
 )
 
