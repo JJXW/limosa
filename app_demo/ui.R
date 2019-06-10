@@ -260,7 +260,8 @@ body <- dashboardBody(
           fluidRow(
             column(2,actionButton("UseTheseVars_tree", "Choose These Variables & Run Tree Classification"))
           ),
-          fluidRow(DT::dataTableOutput("tableTREE"))
+          fluidRow(DT::dataTableOutput("tableTREE")),
+          fluidRow(plotOutput("tree_plot"))
           
     )
 )

@@ -1261,14 +1261,21 @@ observe({
   updateSelectInput(session,"tree_split_var",label = "Select variables for tree to use as possible splits.",choices = c('',values))
   })
   
+  
+  unique_outcomes <- eventReactive(input$UseTheseVars_tree, {
+    
+    return(length(unique(survey_data_reactive()[,input$tree_target_var])))
+    
+  })
+  
   tree_model <- eventReactive(input$UseTheseVars_tree, {
     
-    masterframeFX = function(test_data, vars, target_var, target_var_type){
+    masterframeFX = function(test_data, vars, target_var, target_var_type, min_leaf){
       
       if(target_var_type == "categorical"){
         ###CATEGORICAL###
         
-        unique_outcomes = length(unique(test_data[,target_var]))
+        unique_outcomes = unique_outcomes()
         #creating the masterframe, note the rows is capped at 10000 for now (do not know how to predict exact rows)
         masterframe = as.data.frame(matrix(nrow = 10000, ncol = (9 + 2*unique_outcomes)))
         colnames = c("Leaf","n","yval",as.character(unique(test_data[,target_var])[order(unique(test_data[,target_var]))]),"w","x","y","z","rule",paste("avg",unique(test_data[,target_var])[order(unique(test_data[,target_var]))],sep="_"),"Dif_Score")
@@ -1290,13 +1297,13 @@ observe({
           
           #running the tree
           if(length(vars)>3){
-          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = min_leaf))
           } else if (length(vars)>2){
-            model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+            model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(minbucket = min_leaf))
           } else if (length(vars)>1){
-            model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+            model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(minbucket = min_leaf))
           } else {
-            model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+            model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(minbucket = min_leaf))
           }
           
           #choosing only the leaves
@@ -1374,13 +1381,13 @@ observe({
           
           #running the tree
           if(length(vars)>3){
-            model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+            model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = min_leaf))
           } else if (length(vars)>2){
-            model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+            model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(minbucket = min_leaf))
           } else if (length(vars)>1){
-            model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+            model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(minbucket = min_leaf))
           } else {
-            model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(minbucket = input$min_leaf))
+            model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(minbucket = min_leaf))
           }
           
           #choosing only the leaves
@@ -1434,7 +1441,7 @@ observe({
       return(masterframe)
     }
   
-    return(masterframeFX(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$tree_target_var_type))
+    return(masterframeFX(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$tree_target_var_type,input$min_leaf))
   })
   
   output$tableTREE <- DT::renderDataTable({
@@ -1445,10 +1452,26 @@ observe({
 
   
   ####FOR JON TO CREATE CHART###
-  # output$tree_plot <- renderPlot({
-  #   
-  #   rpart.plot(tree_model())
-  # })
+  output$tree_plot <- renderPlot({
+    
+    model_data <- tree_model()
+    unique_outcomes <- unique_outcomes()
+    
+    model_data <- model_data[, c(1:3, 4:(unique_outcomes+3))]
+    model_data$row <- c(1:nrow(model_data))
+    
+    
+    plot_data <-melt(model_data, id=c(1:3, ncol(model_data)), measure=4:(unique_outcomes+3))
+    
+    p <- 
+      ggplot() +
+      geom_bar(aes(y=value, x=row, fill = variable), 
+               data = plot_data, 
+               stat = 'identity')
+        
+    return(p)
+    
+  })
   
   
 }
