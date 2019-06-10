@@ -1272,6 +1272,9 @@ observe({
     
     masterframeFX = function(test_data, vars, target_var, target_var_type, min_leaf){
       
+      #progress bar
+      withProgress(message = "Finding cool things...", value = 0, {
+        
       if(target_var_type == "categorical"){
         ###CATEGORICAL###
         
@@ -1351,11 +1354,13 @@ observe({
             j = j + numleafs
             
           }
+          incProgress(1/ncol(var_comb_frame))
+         Sys.sleep(0.01)
         }
         
-        #removing duplicates from the model (e.g., two different groups of 4 vars give the same outputted best tree)
+        #removing duplicates from the model (e.g., two different groups of 4 vars give the same outputted best tree) and sorting by Dif_Score
         masterframe = masterframe[!duplicated(masterframe$rule),]
-        print(unique(masterframe$rule))
+        masterframe = masterframe[order(masterframe$Dif_Score,decreasing = T),]
         
         
         #end if
@@ -1431,12 +1436,14 @@ observe({
           }
         }
       
-        #removing duplicates  
+        #removing duplicates and sorting by Dif_Score
       masterframe = masterframe[!duplicated(masterframe$rule),]
-        
+      masterframe = masterframe[order(masterframe$Dif_Score,decreasing = T),]
+      
         
       }
       
+      })  
       ##end if/else
       return(masterframe)
     }
@@ -1445,29 +1452,47 @@ observe({
   })
   
   output$tableTREE <- DT::renderDataTable({
-    DT::datatable(data = tree_model(),
-                  options = list(scrollX = T))
+    
+    #creating the output table
+    out_table = tree_model()
+    out_table$row = 1:nrow(out_table)
+    out_table = out_table[,c('row','n','rule')]
+    
+    DT::datatable(data = out_table,
+                  options = list(scrollX = T),rownames = F)
   })
 
 
   
   ####FOR JON TO CREATE CHART###
-  output$tree_plot <- renderPlot({
-    
+  output$tree_plot <- renderPlotly({
     model_data <- tree_model()
     unique_outcomes <- unique_outcomes()
     
+    #creating an average row
+    avg_data <- model_data[1, c(1:3, (9+unique_outcomes):(ncol(model_data)-1))]
+    avg_data[,c(1:3)] = ""
+
+    #binding together
     model_data <- model_data[, c(1:3, 4:(unique_outcomes+3))]
-    model_data$row <- c(1:nrow(model_data))
+    colnames(avg_data) = colnames(model_data)
+    model_data = rbind(avg_data,model_data)
     
-    
+    model_data$row <- c(nrow(model_data), 1:(nrow(model_data)-1))
     plot_data <-melt(model_data, id=c(1:3, ncol(model_data)), measure=4:(unique_outcomes+3))
+    print(plot_data)
+    
     
     p <- 
       ggplot() +
       geom_bar(aes(y=value, x=row, fill = variable), 
-               data = plot_data, 
+               data = plot_data,
                stat = 'identity')
+    
+    #using plotly so we can hover
+    p <- ggplotly(p) %>%
+      layout(xaxis = list(tickvals = c(1:nrow(model_data)), ticktext = c(1:(nrow(model_data)-2),"","Avg")))
+    
         
     return(p)
     
