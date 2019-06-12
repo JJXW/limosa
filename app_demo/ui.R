@@ -252,7 +252,7 @@ body <- dashboardBody(
               column(3,
                      numericInput("min_leaf",
                                   "Minimum Numer of Obs in a Model",
-                                  value = 10
+                                  value = 30
                                   )
               )
             )

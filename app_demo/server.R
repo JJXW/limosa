@@ -1280,8 +1280,8 @@ observe({
         
         unique_outcomes = unique_outcomes()
         #creating the masterframe, note the rows is capped at 10000 for now (do not know how to predict exact rows)
-        masterframe = as.data.frame(matrix(nrow = 10000, ncol = (9 + 2*unique_outcomes)))
-        colnames = c("Leaf","n","yval",as.character(unique(test_data[,target_var])[order(unique(test_data[,target_var]))]),"w","x","y","z","rule",paste("avg",unique(test_data[,target_var])[order(unique(test_data[,target_var]))],sep="_"),"Dif_Score")
+        masterframe = as.data.frame(matrix(nrow = 10000, ncol = (10 + 2*unique_outcomes)))
+        colnames = c("Leaf","n","yval",as.character(unique(test_data[,target_var])[order(unique(test_data[,target_var]))]),"w","x","y","z","rule",paste("avg",unique(test_data[,target_var])[order(unique(test_data[,target_var]))],sep="_"),"Dif_Score","pvalue")
         colnames[colnames==""] = "Blank"
         colnames[colnames=="avg_"] = "avg_Blank"
         colnames(masterframe) = colnames
@@ -1351,6 +1351,14 @@ observe({
             #JON TO ASSESS AND CHANGE AS NEEDED
             masterframe[j:(j+numleafs-1),(10+2*unique_outcomes-1)] = round(apply(abs(masterframe[j:(j+numleafs-1),4:(4+unique_outcomes-1)] - masterframe[j:(j+numleafs-1),(10+unique_outcomes-1):(9+2*unique_outcomes-1)]),1,sum),2)
             
+            #chi square p value
+            
+            for(k in 1:numleafs){
+            not_node = model$frame$yval2[1,2:(unique_outcomes+1)] - modframe_yval2s[k,2:(unique_outcomes+1)]
+            chi_tab = cbind(modframe_yval2s[k,2:(unique_outcomes+1)],not_node)
+            masterframe$pvalue[j+k-1] = round(chisq.test(chi_tab)$p.value,2)
+            }
+            
             j = j + numleafs
             
           }
@@ -1360,15 +1368,14 @@ observe({
         
         #removing duplicates from the model (e.g., two different groups of 4 vars give the same outputted best tree) and sorting by Dif_Score
         masterframe = masterframe[!duplicated(masterframe$rule),]
-        masterframe = masterframe[order(masterframe$Dif_Score,decreasing = T),]
-        
-        
+        masterframe = masterframe[order(masterframe$pvalue,decreasing = F),]
+
         #end if
       } else {
         
         ###NUMERIC###
-        masterframe = as.data.frame(matrix(nrow = 10000, ncol = (10)))
-        colnames = c("Leaf","n","yval","w","x","y","z","rule","avg_yval","Dif_Score")
+        masterframe = as.data.frame(matrix(nrow = 10000, ncol = (11)))
+        colnames = c("Leaf","n","yval","w","x","y","z","rule","avg_yval","Dif_Score","pvalue")
         colnames[colnames==""] = "Blank"
         colnames[colnames=="avg_"] = "avg_Blank"
         colnames(masterframe) = colnames
@@ -1400,11 +1407,14 @@ observe({
             #catching models that do not yield leaves
           }
           else {
+            
             modframe = model$frame[model$frame[,1]=="<leaf>",]
+            modframe = modframe[order(as.numeric(row.names(modframe)),decreasing = F),]
             numleafs = nrow(modframe)
             
             #setting masterframe to values in model frame
             #leaf and n
+            print(modframe)
             masterframe[j:(j+numleafs-1),1:2] = modframe[,1:2]
             #yval
             masterframe[j:(j+numleafs-1),3] = round(modframe[,5],2)
@@ -1417,7 +1427,11 @@ observe({
             
             
             #rules
-            masterframe[j:(j+numleafs-1),(8)] = trimws(gsub("\\s+"," ",apply(rpart.rules(model),1,FUN = paste, collapse = " ")))
+            mod_rules = rpart.rules(model)
+            temprule = rpart.rules(model, nn=T)
+            mod_rules2 = mod_rules[match(sort(as.numeric(temprule$nn),decreasing=F),temprule$nn),]
+            
+            masterframe[j:(j+numleafs-1),(8)] = trimws(gsub("\\s+"," ",apply(mod_rules2,1,FUN = paste, collapse = " ")))
             masterframe[j:(j+numleafs-1),(8)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(w\\)",w)},error = function(err){return(masterframe[j:(j+numleafs-1),(8)])})
             masterframe[j:(j+numleafs-1),(8)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(x\\)",x)},error = function(err){return(masterframe[j:(j+numleafs-1),(8)])})
             masterframe[j:(j+numleafs-1),(8)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(8)],"get\\(y\\)",y)},error = function(err){return(masterframe[j:(j+numleafs-1),(8)])})
@@ -1430,6 +1444,20 @@ observe({
             #JON TO ASSESS AND CHANGE AS NEEDED
             masterframe[j:(j+numleafs-1),(10)] = round(masterframe[j:(j+numleafs-1),3] - masterframe[j:(j+numleafs-1),(9)],2)
             
+            #chi square p value
+            party_model = as.party(model)
+            party_index = 1:nrow(model$frame)
+            party_nodes = party_index[match(row.names(modframe),row.names(model$frame))]
+            pop_mean = model$frame[1,5]
+            
+            i = 1
+            for(k in party_nodes){
+              #return the values in a leaf
+              leaf_of_choice = data_party(party_model,k)
+              leaf_response = leaf_of_choice[,ncol(leaf_of_choice)] #returning the last column which is the response variable
+              masterframe$pvalue[j+i-1] = round(t.test(leaf_response,mu = pop_mean)$p.value,2)
+              i = i+1
+            }
             
             j = j + numleafs
             
@@ -1438,7 +1466,7 @@ observe({
       
         #removing duplicates and sorting by Dif_Score
       masterframe = masterframe[!duplicated(masterframe$rule),]
-      masterframe = masterframe[order(masterframe$Dif_Score,decreasing = T),]
+      masterframe = masterframe[order(masterframe$pvalue,decreasing = F),]
       
         
       }
@@ -1456,7 +1484,7 @@ observe({
     #creating the output table
     out_table = tree_model()
     out_table$row = 1:nrow(out_table)
-    out_table = out_table[,c('row','n','rule')]
+    out_table = out_table[,c('row','n','rule','pvalue')]
     
     DT::datatable(data = out_table,
                   options = list(scrollX = T),rownames = F)
@@ -1470,17 +1498,17 @@ observe({
     unique_outcomes <- unique_outcomes()
     
     #creating an average row
-    avg_data <- model_data[1, c(1:3, (9+unique_outcomes):(ncol(model_data)-1))]
+    avg_data <- model_data[1, c(1:3, (9+unique_outcomes):(ncol(model_data)-2))]
     avg_data[,c(1:3)] = ""
 
     #binding together
-    model_data <- model_data[, c(1:3, 4:(unique_outcomes+3))]
+    model_data <- model_data[, c(1:3, 4:(3+unique_outcomes))]
     colnames(avg_data) = colnames(model_data)
     model_data = rbind(avg_data,model_data)
     
     model_data$row <- c(nrow(model_data), 1:(nrow(model_data)-1))
     plot_data <-melt(model_data, id=c(1:3, ncol(model_data)), measure=4:(unique_outcomes+3))
-    print(plot_data)
+    
     
     
     p <- 
