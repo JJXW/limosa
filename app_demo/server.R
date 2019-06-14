@@ -9,7 +9,7 @@ server <- function(input, output, session) {
         dataFile <- input$file1
         survey_data <- read.csv(dataFile$datapath)
       } else{
-        survey_data <- survey_data_default
+        survey_data <- as.data.frame(matrix(ncol=1,nrow=1,"No Data Uploaded"))
       }
       
       return(survey_data)
@@ -1270,12 +1270,12 @@ observe({
   
   tree_model <- eventReactive(input$UseTheseVars_tree, {
     
-    masterframeFX = function(test_data, vars, target_var, target_var_type, min_leaf){
+    masterframeFX = function(test_data, vars, target_var, min_leaf){
       
       #progress bar
-      withProgress(message = "Finding cool things...", value = 0, {
+      withProgress(message = "Assessing all potential datacuts...", value = 0, {
         
-      if(target_var_type == "categorical"){
+      if(class(test_data[,target_var]) != "integer"){
         ###CATEGORICAL###
         
         unique_outcomes = unique_outcomes()
@@ -1354,7 +1354,7 @@ observe({
             #chi square p value
             
             for(k in 1:numleafs){
-            not_node = model$frame$yval2[1,2:(unique_outcomes+1)] - modframe_yval2s[k,2:(unique_outcomes+1)]
+            not_node = model$frame$yval2[1,2:(unique_outcomes+1)]
             chi_tab = cbind(modframe_yval2s[k,2:(unique_outcomes+1)],not_node)
             masterframe$pvalue[j+k-1] = round(chisq.test(chi_tab)$p.value,2)
             }
@@ -1476,7 +1476,7 @@ observe({
       return(masterframe)
     }
   
-    return(masterframeFX(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$tree_target_var_type,input$min_leaf))
+    return(masterframeFX(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$min_leaf))
   })
   
   output$tableTREE <- DT::renderDataTable({
@@ -1486,9 +1486,50 @@ observe({
     out_table$row = 1:nrow(out_table)
     out_table = out_table[,c('row','n','rule','pvalue')]
     
+    
     DT::datatable(data = out_table,
                   options = list(scrollX = T),rownames = F)
   })
+  
+  
+  
+  #download this table
+  output$report = downloadHandler(
+    filename = 'myreport.pdf',
+    
+    content = function(file) {
+      src <- normalizePath('output_table.Rmd')
+      
+      # temporarily switch to the temp dir, in case you do not have write
+      # permission to the current working directory
+      owd <- setwd(tempdir())
+      on.exit(setwd(owd))
+      file.copy(src, 'output_table.Rmd', overwrite = TRUE)
+      
+      library(rmarkdown)
+      out <- render('output_table.Rmd', output_format = pdf_document())
+      file.rename(out, file)
+    }
+  )
+  
+
+
+  
+  # downtable = reactive({
+  #   out_table = tree_model()
+  #   out_table$row = 1:nrow(out_table)
+  #   out_table = out_table[,c('row','n','rule','pvalue')]
+  #   return(out_table)
+  # })
+  # 
+  # output$downloadData <- downloadHandler(
+  #   filename = "PredictionFinder.pdf",
+  #   content = function(file) {
+  #     pdf(file) # open the pdf device
+  #     downtable()
+  #     dev.off()  # turn the device off
+  #   }
+  # )
 
 
   

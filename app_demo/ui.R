@@ -5,9 +5,12 @@ header <- dashboardHeader(
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Data Upload & Summary", tabName = "dashboard"),
-    menuItem("Auto-Segment", tabName = "analysis"),
-    menuItem("Segment Storyliner", tabName = "manual"),
-    menuItem("Prediction Finder", tabName = "tree")
+    menuItem("Prediction Finder", tabName = "tree"),
+    menuItem("Info & Contact", tabName = "help")
+    # ,
+    # menuItem("Auto-Segment", tabName = "analysis"),
+    # menuItem("Segment Storyliner", tabName = "manual")
+    
   )
 )
 
@@ -26,7 +29,7 @@ body <- dashboardBody(
               valueBoxOutput("survey_columns")
               ),
             fluidRow(
-              DT::dataTableOutput("rawtable")
+              tryCatch(DT::dataTableOutput("rawtable"),error = function(err){print("No data")})
               )
             ),
     tabItem("analysis",
@@ -226,8 +229,8 @@ body <- dashboardBody(
  ),
  
     tabItem("tree", 
-            fluidRow(titlePanel("Tree Based Classification"),
-                     mainPanel("This tool allows you to implement tree based classification.")),
+            fluidRow(titlePanel("Prediction Finder"),
+                     mainPanel("This tool allows you to find the best models of datacuts that predict a given target variable.")),
             wellPanel(fluidRow(
               column(3,
                      selectInput("tree_target_var",
@@ -236,12 +239,7 @@ body <- dashboardBody(
                                  multiple = F)
                      
               ),
-              column(3,
-                      selectInput("tree_target_var_type",
-                                  "Select the type of Target Variable.",
-                                  c("categorical","numeric"),
-                                  multiple = F)
-              ),
+              
               column(3,
                      selectInput("tree_split_var",
                                  "Range of Variables To Include",
@@ -258,14 +256,41 @@ body <- dashboardBody(
             )
           ),
           fluidRow(
-            column(2,actionButton("UseTheseVars_tree", "Choose These Variables & Run Tree Classification"))
+            column(2,actionButton("UseTheseVars_tree", "Choose These Variables & Run"))
           ),
           br(),
           fluidRow(plotlyOutput("tree_plot")),
           br(),
           fluidRow(DT::dataTableOutput("tableTREE"))
+          ,
+          fluidRow(
+            downloadButton("report", "Download")
+          )
           
-    )
+    ),
+ tabItem("help",
+         fluidRow(titlePanel("Information and Contact")),
+          br(),
+         h4(strong("Beta Software Product")),
+         "This is Folsom Analytics, Inc.'s Beta Product aimed to help non-technical users leverage data science techniques to improve the way they harness information from data.",
+        "3	Software is prerelease code and is not at the level of performance or compatibility of a final, generally available product offering. Software may not operate correctly and may be substantially modified prior to first commercial shipment, or withdrawn. Software is provided 'AS IS' without warranty of any kind. The entire risk arising out of the use or performance of Software remains with Licensee. In no event shall Folsom Analytics, Inc. be liable for any damage whatsoever arising out of the use of or inability to use Software, even if Folsom Analytics, Inc. has been advised of the possibility of such damages. ",
+        br(),
+        br(),
+        h4(strong("Methodology")),
+        "Folsom Analytics' Prediction Finder leverages the machine learning technique of classification trees to produce relevant models for your consideration.",
+        "Pvalue is calculated using a chi-squared test for categorical target variables and a t-test for numeric target values.",
+        "For more assitance on methodology please contact us.",
+        br(),
+        br(),
+        h4(strong("Contact")),
+        "Please reach out with feedback or if you encounter difficulties. We are excited to build our offering to add the most value possible to your company.",
+        br(),
+        "Carl Moos: carlmoos@mit.edu",
+        br(),
+         "Jonathan Wang: jonathan352@gmail.com",
+        br(),
+         "Phone Number: 714-745-0455"
+         )
 )
 )
 
