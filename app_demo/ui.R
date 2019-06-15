@@ -264,7 +264,7 @@ body <- dashboardBody(
           fluidRow(DT::dataTableOutput("tableTREE"))
           ,
           fluidRow(
-            downloadButton("report", "Download")
+            downloadButton("report", "Download Table")
           )
           
     ),

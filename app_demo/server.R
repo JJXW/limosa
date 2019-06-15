@@ -625,20 +625,17 @@ observe({
     returntable <- output_table(tablex,Segment_Number,data_2)
     
   #TRYING TO CREATE DOWNLOAD ABILITY - DOES NOT WORK#
-    # output$down <- downloadHandler(
-    #   #Specify the filename
-    #   filename = function() {
-    #     "yoursegements.png"
-    #   },
-    #   content = function(file){
-    #     #open device
-    #     png(file)
-    #     returntable        
-    #     dev.off()
-    #     #create the plot
-    #     #close the device
-    #   }
-    # )
+    output$down <- downloadHandler(
+      
+      
+      #Specify the filename
+      filename = function() {
+        "yoursegements.csv"
+      },
+      content = function(file){
+        write.csv()
+      }
+    )
     
     
     return(returntable)
@@ -1479,15 +1476,20 @@ observe({
     return(masterframeFX(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$min_leaf))
   })
   
-  output$tableTREE <- DT::renderDataTable({
+  out_table <- reactive({
     
     #creating the output table
     out_table = tree_model()
     out_table$row = 1:nrow(out_table)
     out_table = out_table[,c('row','n','rule','pvalue')]
     
+    return(out_table)
     
-    DT::datatable(data = out_table,
+  })
+  
+  output$tableTREE <- DT::renderDataTable({
+
+    DT::datatable(data = out_table(),
                   options = list(scrollX = T),rownames = F)
   })
   
@@ -1495,20 +1497,11 @@ observe({
   
   #download this table
   output$report = downloadHandler(
-    filename = 'myreport.pdf',
-    
-    content = function(file) {
-      src <- normalizePath('output_table.Rmd')
-      
-      # temporarily switch to the temp dir, in case you do not have write
-      # permission to the current working directory
-      owd <- setwd(tempdir())
-      on.exit(setwd(owd))
-      file.copy(src, 'output_table.Rmd', overwrite = TRUE)
-      
-      library(rmarkdown)
-      out <- render('output_table.Rmd', output_format = pdf_document())
-      file.rename(out, file)
+    filename = function() {
+      "yoursegements.csv"
+    },
+    content = function(file){
+      write.csv(out_table(), file)
     }
   )
   
