@@ -1260,17 +1260,23 @@ observe({
 
 
   unique_outcomes <- eventReactive(input$UseTheseVars_tree, {
-
     return(length(unique(survey_data_reactive()[,input$tree_target_var])))
 
   })
 
+  #outputting the frame to populate the table and categorical chart
   tree_model <- eventReactive(input$UseTheseVars_tree, {
-
     return(masterframeFX(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$min_leaf, unique_outcomes()))
 
   })
 
+  #outputting the dataset for each relevant node in the same order as the masterframe rows
+  numeric_nodeframe <- eventReactive(input$UseTheseVars_tree, {
+        return(masterframe_nodecuts(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$min_leaf, unique_outcomes()))
+
+  })
+
+ 
   out_table <- reactive({
 
     #creating the output table
@@ -1299,25 +1305,6 @@ observe({
       write.csv(out_table(), file)
     }
   )
-
-
-
-
-  # downtable = reactive({
-  #   out_table = tree_model()
-  #   out_table$row = 1:nrow(out_table)
-  #   out_table = out_table[,c('row','n','rule','pvalue')]
-  #   return(out_table)
-  # })
-  #
-  # output$downloadData <- downloadHandler(
-  #   filename = "PredictionFinder.pdf",
-  #   content = function(file) {
-  #     pdf(file) # open the pdf device
-  #     downtable()
-  #     dev.off()  # turn the device off
-  #   }
-  # )
 
 
 
@@ -1353,6 +1340,4 @@ observe({
     return(p)
 
   })
-
-
 }
