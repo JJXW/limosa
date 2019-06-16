@@ -22,3 +22,4 @@ library(knitr)
 
 
 survey_data_default <- read.csv('intellisurvey_demo.csv')
+source('function.R')
