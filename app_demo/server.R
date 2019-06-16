@@ -1411,7 +1411,6 @@ observe({
             
             #setting masterframe to values in model frame
             #leaf and n
-            print(modframe)
             masterframe[j:(j+numleafs-1),1:2] = modframe[,1:2]
             #yval
             masterframe[j:(j+numleafs-1),3] = round(modframe[,5],2)
@@ -1481,7 +1480,7 @@ observe({
     #creating the output table
     out_table = tree_model()
     out_table$row = 1:nrow(out_table)
-    out_table = out_table[,c('row','n','rule','pvalue')]
+    out_table = cbind(out_table[,c('row','n','rule','pvalue')],out_table[,str_detect(colnames(out_table),"avg_")])
     
     return(out_table)
     
