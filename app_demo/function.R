@@ -2,6 +2,12 @@
 
 masterframeFX = function(test_data, vars, target_var, min_leaf, cpinput, unique_outcomes, pvalue_thresh){
   
+  if(cpinput == TRUE){
+    cpinput = 0.01
+  } else{
+    cpinput = -0.01
+  }
+  
   #progress bar
   withProgress(message = "Assessing all potential datacuts...", value = 0, {
     
@@ -209,7 +215,11 @@ masterframeFX = function(test_data, vars, target_var, min_leaf, cpinput, unique_
 
 ####OUTPUTTING THE LIST OF DATAFRAMES FOR NUMERIC BOXPLOT OUTPUT####
 masterframe_nodecuts = function(test_data, vars, target_var, min_leaf, cpinput, unique_outcomes, pvalue_thresh){
-
+  if(cpinput == TRUE){
+    cpinput = 0.01
+  } else{
+    cpinput = -0.01
+  }
     
     if(!(class(test_data[,target_var]) %in% c("integer","numeric"))){
       ###CATEGORICAL###

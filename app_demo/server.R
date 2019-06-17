@@ -1353,7 +1353,7 @@ observe({
                   position = position_stack(vjust = 0.5)) +
         scale_fill_brewer(palette = "Set2") +
         theme_minimal(base_size = 16) +
-        ylab("Percentage") +
+        ylab("Value") +
         xlab(NULL)
       
       p <- ggplotly(p)

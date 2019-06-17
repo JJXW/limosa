@@ -255,15 +255,16 @@ body <- dashboardBody(
                                   )
               ),
               column(3,
-                     numericInput("cpchoice",
-                                  "Advanced Parameter: Complexity Threshold",
-                                  value = 0.010,step = 0.001
+                     numericInput("pvalue_thresh",
+                                  "Advanced Parameter: Max pvalue to include",
+                                  value = 0.1,step = 0.01
                      )
               ),
               column(3,
-                     numericInput("pvalue_thresh","Advanced Parameter: Max pvalue to include",
-                                  value = 1, step = 0.01))
+                    checkboxInput("cpchoice","Advanced Parameter: Check to apply Complexity Threshold",
+                                  value = FALSE))
             )
+            
           ),
           fluidRow(
             column(2,actionButton("UseTheseVars_tree", "Choose These Variables & Run"))
