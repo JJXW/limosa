@@ -1,6 +1,6 @@
 
 
-masterframeFX = function(test_data, vars, target_var, min_leaf, unique_outcomes){
+masterframeFX = function(test_data, vars, target_var, min_leaf, cpinput, unique_outcomes, pvalue_thresh){
   
   #progress bar
   withProgress(message = "Assessing all potential datacuts...", value = 0, {
@@ -29,13 +29,13 @@ masterframeFX = function(test_data, vars, target_var, min_leaf, unique_outcomes)
         
         #running the tree
         if(length(vars)>3){
-          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         } else if (length(vars)>2){
-          model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         } else if (length(vars)>1){
-          model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         } else {
-          model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         }
         
         #choosing only the leaves
@@ -97,6 +97,7 @@ masterframeFX = function(test_data, vars, target_var, min_leaf, unique_outcomes)
       
       #removing duplicates from the model (e.g., two different groups of 4 vars give the same outputted best tree) and sorting by Dif_Score
       masterframe = masterframe[!duplicated(masterframe$rule),]
+      masterframe = masterframe[masterframe$pvalue < pvalue_thresh,]
       masterframe = masterframe[order(masterframe$pvalue,decreasing = F),]
       
       #end if
@@ -122,13 +123,13 @@ masterframeFX = function(test_data, vars, target_var, min_leaf, unique_outcomes)
         
         #running the tree
         if(length(vars)>3){
-          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         } else if (length(vars)>2){
-          model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         } else if (length(vars)>1){
-          model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         } else {
-          model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         }
         
         #choosing only the leaves
@@ -192,8 +193,9 @@ masterframeFX = function(test_data, vars, target_var, min_leaf, unique_outcomes)
         }
       }
       
-      #removing duplicates and sorting by Dif_Score
+      #removing duplicates and sorting by pvalue
       masterframe = masterframe[!duplicated(masterframe$rule),]
+      masterframe = masterframe[masterframe$pvalue < pvalue_thresh,]
       masterframe = masterframe[order(masterframe$pvalue,decreasing = F),]
       
       
@@ -206,7 +208,7 @@ masterframeFX = function(test_data, vars, target_var, min_leaf, unique_outcomes)
 
 
 ####OUTPUTTING THE LIST OF DATAFRAMES FOR NUMERIC BOXPLOT OUTPUT####
-masterframe_nodecuts = function(test_data, vars, target_var, min_leaf, unique_outcomes){
+masterframe_nodecuts = function(test_data, vars, target_var, min_leaf, cpinput, unique_outcomes, pvalue_thresh){
 
     
     if(!(class(test_data[,target_var]) %in% c("integer","numeric"))){
@@ -233,13 +235,13 @@ masterframe_nodecuts = function(test_data, vars, target_var, min_leaf, unique_ou
         
         #running the tree
         if(length(vars)>3){
-          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         } else if (length(vars)>2){
-          model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         } else if (length(vars)>1){
-          model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         } else {
-          model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         }
         
         #choosing only the leaves
@@ -301,6 +303,7 @@ masterframe_nodecuts = function(test_data, vars, target_var, min_leaf, unique_ou
       
       #removing duplicates from the model (e.g., two different groups of 4 vars give the same outputted best tree) and sorting by Dif_Score
       masterframe = masterframe[!duplicated(masterframe$rule),]
+      masterframe = masterframe[masterframe$pvalue < pvalue_thresh,]
       masterframe = masterframe[order(masterframe$pvalue,decreasing = F),]
       
       #end if
@@ -327,13 +330,13 @@ masterframe_nodecuts = function(test_data, vars, target_var, min_leaf, unique_ou
         
         #running the tree
         if(length(vars)>3){
-          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         } else if (length(vars)>2){
-          model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x) + get(y), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         } else if (length(vars)>1){
-          model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w) + get(x), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         } else {
-          model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(minbucket = min_leaf))
+          model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         }
         
         #choosing only the leaves
@@ -401,8 +404,11 @@ masterframe_nodecuts = function(test_data, vars, target_var, min_leaf, unique_ou
       
       #removing duplicates and sorting by Dif_Score
       masterframe = masterframe[!duplicated(masterframe$rule),]
+      masterframe = masterframe[masterframe$pvalue < pvalue_thresh,]
       masterframe = masterframe[order(masterframe$pvalue,decreasing = F),]
+      
       node_list = node_list[!duplicated(masterframe$rule)]
+      node_list = node_list[masterframe$pvalue < pvalue_thresh]
       node_list = node_list[order(masterframe$pvalue,decreasing = F)]
 
     }

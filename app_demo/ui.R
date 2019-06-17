@@ -246,13 +246,23 @@ body <- dashboardBody(
                                  c('',colnames(survey_data_default)),
                                  selected = NULL,
                                  multiple = T)
-              ),
+              ))),
+            wellPanel(fluidRow(
               column(3,
                      numericInput("min_leaf",
-                                  "Minimum Numer of Obs in a Model",
+                                  "Minimum Numer of Observations in a Model",
                                   value = 30
                                   )
-              )
+              ),
+              column(3,
+                     numericInput("cpchoice",
+                                  "Advanced Parameter: Complexity Threshold",
+                                  value = 0.010,step = 0.001
+                     )
+              ),
+              column(3,
+                     numericInput("pvalue_thresh","Advanced Parameter: Max pvalue to include",
+                                  value = 1, step = 0.01))
             )
           ),
           fluidRow(
