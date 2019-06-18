@@ -1255,8 +1255,8 @@ observe({
 
   #MAKING SURE VARIABLES UPDATE ACROSS SELECTION VARIABLES#
   #automatic segmentation
-  updateSelectInput(session,"tree_target_var",label = "Select variable for tree to optimize groupings on.",choices = c('',values))
-  updateSelectInput(session,"tree_split_var",label = "Select variables for tree to use as possible splits.",choices = c('',values))
+  updateSelectInput(session,"tree_target_var",label = "Target Variable.",choices = c('',values))
+  updateSelectInput(session,"tree_split_var",label = "Range of Variables to Include.",choices = c('',values))
   })
 
 
@@ -1313,54 +1313,55 @@ observe({
 
 
   ####FOR JON TO CREATE CHART###
-  output$tree_plot <- renderPlotly({
+  
+  plot_1 <- eventReactive(input$UseTheseVars_tree, {
     
     if(!(class(survey_data_reactive()[,input$tree_target_var]) %in% c("integer","numeric"))){
-  
-    #CATEGORICAL
-    if(nrow(tree_model())>1){
-    model_data <- tree_model()
-      unique_outcomes <- unique_outcomes()
-
-      #creating an average row
-      avg_data <- model_data[1, c(1:3, (9+unique_outcomes):(ncol(model_data)-2))]
-      avg_data[,c(1:3)] = ""
-
-      #binding together
-      model_data <- model_data[, c(1:3, 4:(3+unique_outcomes))]
-      colnames(avg_data) = colnames(model_data)
-      model_data = rbind(avg_data,model_data)
-
-      model_data$model <- c(nrow(model_data), 1:(nrow(model_data)-1))
-      plot_data <-melt(model_data, id=c(1:3, ncol(model_data)), measure=4:(unique_outcomes+3))
-
-      p <-
-        ggplot() +
-        geom_bar(aes(y=value, x=model, fill = variable),
-                 data = plot_data,
-                 stat = 'identity')
-
-      #using plotly so we can hover
-      p <- ggplotly(p) %>%
-        layout(xaxis = list(tickvals = c(1:nrow(model_data)), ticktext = c(1:(nrow(model_data)-2),"","Avg")))
-    }
-    else{
-      overalldata = as.data.frame(table(survey_data_reactive()[,input$tree_target_var]))
-      overalldata$overall = "Overall"
-      overalldata <- rename(overalldata, Target_Variable = Var1)
       
-      p  <- ggplot(overalldata, aes(x = overall, y = Freq, fill = Target_Variable)) +
-        geom_col() +
-        geom_text(aes(label = ""),
-                  position = position_stack(vjust = 0.5)) +
-        scale_fill_brewer(palette = "Set2") +
-        theme_minimal(base_size = 16) +
-        ylab("Value") +
-        xlab(NULL)
-      
-      p <- ggplotly(p)
-      
-    }
+      #CATEGORICAL
+      if(nrow(tree_model())>1){
+        model_data <- tree_model()
+        unique_outcomes <- unique_outcomes()
+        
+        #creating an average row
+        avg_data <- model_data[1, c(1:3, (9+unique_outcomes):(ncol(model_data)-2))]
+        avg_data[,c(1:3)] = ""
+        
+        #binding together
+        model_data <- model_data[, c(1:3, 4:(3+unique_outcomes))]
+        colnames(avg_data) = colnames(model_data)
+        model_data = rbind(avg_data,model_data)
+        
+        model_data$model <- c(nrow(model_data), 1:(nrow(model_data)-1))
+        plot_data <-melt(model_data, id=c(1:3, ncol(model_data)), measure=4:(unique_outcomes+3))
+        
+        p <-
+          ggplot() +
+          geom_bar(aes(y=value, x=model, fill = variable),
+                   data = plot_data,
+                   stat = 'identity')
+        
+        #using plotly so we can hover
+        p <- ggplotly(p) %>%
+          layout(xaxis = list(tickvals = c(1:nrow(model_data)), ticktext = c(1:(nrow(model_data)-2),"","Avg")))
+      }
+      else{
+        overalldata = as.data.frame(table(survey_data_reactive()[,input$tree_target_var]))
+        overalldata$overall = "Overall"
+        overalldata <- rename(overalldata, Target_Variable = Var1)
+        
+        p  <- ggplot(overalldata, aes(x = overall, y = Freq, fill = Target_Variable)) +
+          geom_col() +
+          geom_text(aes(label = ""),
+                    position = position_stack(vjust = 0.5)) +
+          scale_fill_brewer(palette = "Set2") +
+          theme_minimal(base_size = 16) +
+          ylab("Value") +
+          xlab(NULL)
+        
+        p <- ggplotly(p)
+        
+      }
     }
     
     else{
@@ -1378,8 +1379,12 @@ observe({
       # 
       # p <- plot_ly(as.data.frame(box_frame), y = ~response_string, color = ~model_string, type = "box")
     }
-
     return(p)
+    
+  })
+  
+  output$tree_plot <- renderPlotly({
+   plot_1()
 
   })
 }
