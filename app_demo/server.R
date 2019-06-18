@@ -1368,16 +1368,12 @@ observe({
       #NUMERIC
       response_data <- numeric_nodeframe()
       response_string = unlist(sapply(response_data, FUN = function(x) (x[,ncol(x)]))) #appending all response vars together
-      model_string = rep(1:length(response_data),sapply(response_data, FUN = function(x) (length(x[,ncol(x)])))) #appending a list identifying the model
+      model_string = factor(rep(1:length(response_data),sapply(response_data, FUN = function(x) (length(x[,ncol(x)]))))) #appending a list identifying the model
       
-      box_frame = cbind(response_string,model_string) #putting the two together
-      
-      p <- ggplot(as.data.frame(box_frame), aes(x=model_string, y=response_string, fill=model_string),) + geom_boxplot()
+      p <- ggplot(data.frame(Target_Variable = response_string, Model = factor(model_string)), aes(x=Model, y=Target_Variable, fill=Model)) + geom_boxplot()
       
       p <- ggplotly(p) %>% layout(autosize = T)
       
-      # 
-      # p <- plot_ly(as.data.frame(box_frame), y = ~response_string, color = ~model_string, type = "box")
     }
     return(p)
     
