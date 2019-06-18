@@ -33,6 +33,7 @@ masterframeFX = function(test_data, vars, target_var, min_leaf, cpinput, unique_
         tryCatch({y = var_comb_frame[3,i]},error = function(err){})
         tryCatch({z = var_comb_frame[4,i]},error = function(err){})
         
+
         #running the tree
         if(length(vars)>3){
           model = rpart(get(target_var) ~ get(w) + get(x) + get(y) + get(z), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
@@ -327,9 +328,9 @@ masterframe_nodecuts = function(test_data, vars, target_var, min_leaf, cpinput, 
       colnames[colnames=="avg_"] = "avg_Blank"
       colnames(masterframe) = colnames
       var_comb_frame = combn(vars,min(4, length(vars)))
+      node_list = list()
       
       j = 1
-      i=1
       for(i in 1:ncol(var_comb_frame)){
         #assigning variables
         w = var_comb_frame[1,i]
@@ -394,32 +395,44 @@ masterframe_nodecuts = function(test_data, vars, target_var, min_leaf, cpinput, 
           party_model = as.party(model)
           party_index = 1:nrow(model$frame)
           party_nodes = party_index[match(row.names(modframe),row.names(model$frame))]
-          print("here are the nodes")
-          print(party_nodes)
-          pop_mean = model$frame[1,5]
-          node_list = list()
           
-          i = 1
+          pop_mean = model$frame[1,5]
+          
+          q = 1
           for(k in party_nodes){
             #return the values in a leaf
             leaf_of_choice = data_party(party_model,k)
-            node_list[[j+i-1]] = leaf_of_choice
-            i = i+1
+            node_list[[j+q-1]] = leaf_of_choice
+            
+            #returning the pvalue
+            leaf_response = leaf_of_choice[,ncol(leaf_of_choice)] #returning the last column which is the response variable
+            masterframe$pvalue[j+q-1] = round(t.test(leaf_response,mu = pop_mean)$p.value,2)
+            
+            q = q+1
+            
           }
-          
           j = j + numleafs
           
         }
       }
       
+
       #removing duplicates and sorting by Dif_Score
+      #note all of the masterframe_X are so that node_list can be subsetted properly
+      masterframe_0 = masterframe
       masterframe = masterframe[!duplicated(masterframe$rule),]
+      
+      masterframe_1 = masterframe
       masterframe = masterframe[masterframe$pvalue < pvalue_thresh,]
+      
+      masterframe_2 = masterframe
       masterframe = masterframe[order(masterframe$pvalue,decreasing = F),]
       
-      node_list = node_list[!duplicated(masterframe$rule)]
-      node_list = node_list[masterframe$pvalue < pvalue_thresh]
-      node_list = node_list[order(masterframe$pvalue,decreasing = F)]
+      node_list = node_list[!duplicated(masterframe_0$rule)]
+      node_list = node_list[masterframe_1$pvalue < pvalue_thresh]
+   
+      node_list = node_list[order(masterframe_2$pvalue,decreasing = F)]
+      
 
     }
     
