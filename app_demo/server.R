@@ -1316,20 +1316,7 @@ observe({
   output$tree_plot <- renderPlotly({
     
     if(!(class(survey_data_reactive()[,input$tree_target_var]) %in% c("integer","numeric"))){
-      print("we get here")
-    #NUMERIC
-    response_data <- numeric_nodeframe()
-    response_string = unlist(sapply(response_data, FUN = function(x) (x[,ncol(x)]))) #appending all response vars together
-    model_string = rep(1:length(response_data),sapply(response_data, FUN = function(x) (length(x[,ncol(x)])))) #appending a list identifying the model
-    
-    box_frame = cbind(response_string,model_string) #putting the two together
-    
-    p <- plot_ly(ggplot2::box_frame, y = ~response_string, color = ~model_string, type = "box")
-
-      
-      
-    }
-    else{
+  
     #CATEGORICAL
     if(nrow(tree_model())>1){
     model_data <- tree_model()
@@ -1374,6 +1361,22 @@ observe({
       p <- ggplotly(p)
       
     }
+    }
+    
+    else{
+      #NUMERIC
+      response_data <- numeric_nodeframe()
+      response_string = unlist(sapply(response_data, FUN = function(x) (x[,ncol(x)]))) #appending all response vars together
+      model_string = rep(1:length(response_data),sapply(response_data, FUN = function(x) (length(x[,ncol(x)])))) #appending a list identifying the model
+      
+      box_frame = cbind(response_string,model_string) #putting the two together
+      
+      p <- ggplot(as.data.frame(box_frame), aes(x=model_string, y=response_string, fill=model_string),) + geom_boxplot()
+      
+      p <- ggplotly(p) %>% layout(autosize = T)
+      
+      # 
+      # p <- plot_ly(as.data.frame(box_frame), y = ~response_string, color = ~model_string, type = "box")
     }
 
     return(p)
