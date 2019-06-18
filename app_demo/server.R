@@ -1316,47 +1316,53 @@ observe({
   output$tree_plot <- renderPlotly({
     
     ##ADD CONDITION FOR NUMERIC##
-    if(nrow(tree_model())>1){
-    model_data <- tree_model()
-      unique_outcomes <- unique_outcomes()
-
-      #creating an average row
-      avg_data <- model_data[1, c(1:3, (9+unique_outcomes):(ncol(model_data)-2))]
-      avg_data[,c(1:3)] = ""
-
-      #binding together
-      model_data <- model_data[, c(1:3, 4:(3+unique_outcomes))]
-      colnames(avg_data) = colnames(model_data)
-      model_data = rbind(avg_data,model_data)
-
-      model_data$model <- c(nrow(model_data), 1:(nrow(model_data)-1))
-      plot_data <-melt(model_data, id=c(1:3, ncol(model_data)), measure=4:(unique_outcomes+3))
-
-      p <-
-        ggplot() +
-        geom_bar(aes(y=value, x=model, fill = variable),
-                 data = plot_data,
-                 stat = 'identity')
-
-      #using plotly so we can hover
-      p <- ggplotly(p) %>%
-        layout(xaxis = list(tickvals = c(1:nrow(model_data)), ticktext = c(1:(nrow(model_data)-2),"","Avg")))
-    }
-    else{
-      overalldata = as.data.frame(table(survey_data_reactive()[,input$tree_target_var]))
-      overalldata$overall = "Overall"
-      overalldata <- rename(overalldata, Target_Variable = Var1)
+    if(!(class(survey_data_reactive()[,input$tree_target_var]) %in% c("integer","numeric"))){
+      if(nrow(tree_model())>1){
+      model_data <- tree_model()
+        unique_outcomes <- unique_outcomes()
+  
+        #creating an average row
+        avg_data <- model_data[1, c(1:3, (9+unique_outcomes):(ncol(model_data)-2))]
+        avg_data[,c(1:3)] = ""
+  
+        #binding together
+        model_data <- model_data[, c(1:3, 4:(3+unique_outcomes))]
+        colnames(avg_data) = colnames(model_data)
+        model_data = rbind(avg_data,model_data)
+  
+        model_data$model <- c(nrow(model_data), 1:(nrow(model_data)-1))
+        plot_data <-melt(model_data, id=c(1:3, ncol(model_data)), measure=4:(unique_outcomes+3))
+  
+        p <-
+          ggplot() +
+          geom_bar(aes(y=value, x=model, fill = variable),
+                   data = plot_data,
+                   stat = 'identity')
+  
+        #using plotly so we can hover
+        p <- ggplotly(p) %>%
+          layout(xaxis = list(tickvals = c(1:nrow(model_data)), ticktext = c(1:(nrow(model_data)-2),"","Avg")))
+      }
+      else{
+        overalldata = as.data.frame(table(survey_data_reactive()[,input$tree_target_var]))
+        overalldata$overall = "Overall"
+        overalldata <- rename(overalldata, Target_Variable = Var1)
+        
+        p  <- ggplot(overalldata, aes(x = overall, y = Freq, fill = Target_Variable)) +
+          geom_col() +
+          geom_text(aes(label = ""),
+                    position = position_stack(vjust = 0.5)) +
+          scale_fill_brewer(palette = "Set2") +
+          theme_minimal(base_size = 16) +
+          ylab("Value") +
+          xlab(NULL)
+        
+        p <- ggplotly(p)
+        
+      }
+    } else{
       
-      p  <- ggplot(overalldata, aes(x = overall, y = Freq, fill = Target_Variable)) +
-        geom_col() +
-        geom_text(aes(label = ""),
-                  position = position_stack(vjust = 0.5)) +
-        scale_fill_brewer(palette = "Set2") +
-        theme_minimal(base_size = 16) +
-        ylab("Value") +
-        xlab(NULL)
-      
-      p <- ggplotly(p)
+      print(numeric_nodeframe())
       
     }
 
