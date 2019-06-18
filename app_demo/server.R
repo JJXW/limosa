@@ -1366,6 +1366,7 @@ observe({
     
     else{
       #NUMERIC
+      if(length(numeric_nodeframe())>1){
       response_data <- numeric_nodeframe()
       response_string = unlist(sapply(response_data, FUN = function(x) (x[,ncol(x)]))) #appending all response vars together
       model_string = factor(rep(1:length(response_data),sapply(response_data, FUN = function(x) (length(x[,ncol(x)]))))) #appending a list identifying the model
@@ -1374,6 +1375,16 @@ observe({
       
       p <- ggplotly(p) %>% layout(autosize = T)
       
+      }
+    
+    else{
+      response_string = survey_data_reactive()[,input$tree_target_var]
+      model_string = rep(1, length(response_string))
+      
+      p <- ggplot(data.frame(Target_Variable = response_string, Overall = factor(model_string)), aes(x=Overall, y=Target_Variable, fill=Overall)) + geom_boxplot()
+      
+      p <- ggplotly(p) %>% layout(autosize = T)
+    }
     }
     return(p)
     
