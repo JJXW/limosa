@@ -1249,7 +1249,7 @@ observe({
   })
 
 
-###TREE CLASSIFICATION###
+####TREE CLASSIFICATION####
 
   observe({values <- colnames(survey_data_reactive())
 
@@ -1401,4 +1401,34 @@ observe({
    plot_1()
 
   })
+
+
+####CONDITIONAL INFERENCE TREE SEGMENTATION####
+
+observe({values <- colnames(survey_data_reactive())
+
+#MAKING SURE VARIABLES UPDATE ACROSS SELECTION VARIABLES#
+#automatic segmentation
+updateSelectInput(session,"ctree_target_vars",label = "Segment Drivers",choices = c('',values))
+updateSelectInput(session,"ctree_split_vars",label = "Result Variables to Maximize Segment Differences",choices = c('',values))
+})
+  
+ctree_model <- eventReactive(input$UseTheseVars_ctree,{
+  f <- as.formula(
+    paste(
+      paste(input$ctree_split_vars, collapse = " + "),
+          paste(input$ctree_target_vars, collapse = " + "), 
+          sep = " ~ "))
+  
+  return(ctree(f, data = survey_data_reactive(), na.action = na.omit))
+  
+})
+
+
+output$ctree_plot <- renderPlot({
+  plot(ctree_model(),margins = c(3, 0, 0, 0),
+       tp_args = list(rot = 45, just = c("right", "top")))
+  })
+
+
 }

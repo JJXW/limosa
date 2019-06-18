@@ -6,6 +6,7 @@ sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Data Upload & Summary", tabName = "dashboard"),
     menuItem("Prediction Finder", tabName = "tree"),
+    menuItem("Segment Suggestor", tabName = "ctreeseg"),
     menuItem("Info & Contact", tabName = "help")
     # ,
     # menuItem("Auto-Segment", tabName = "analysis"),
@@ -301,7 +302,35 @@ body <- dashboardBody(
          "Jonathan Wang: jonathan352@gmail.com",
         br(),
          "Phone Number: 714-745-0455"
-         )
+         ),
+ tabItem("ctreeseg",
+         fluidRow(titlePanel("Segment Suggestor")),
+          br(),
+         mainPanel("This tool uses conditional inference trees to suggest powerful data splits in variables that maximally segment outcomes you care about."),
+         br(),
+         wellPanel(fluidRow(
+           column(3,
+                  selectInput("ctree_target_vars",
+                              "Segment Drivers",
+                              c('',colnames(survey_data_default)),
+                              multiple = T)
+           ),
+           
+           column(4,
+                  selectInput("ctree_split_vars",
+                              "Result Variables to Maximize Segment Differences",
+                              c('',colnames(survey_data_default)),
+                              selected = NULL,
+                              multiple = T)
+           )),
+           
+           fluidRow(
+             column(2,actionButton("UseTheseVars_ctree", "Choose These Variables & Run"))
+           ),
+           
+           plotOutput("ctree_plot")
+           )
+ )
 )
 )
 
