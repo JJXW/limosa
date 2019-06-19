@@ -8,7 +8,7 @@ server <- function(input, output, session) {
 
       if(!is.null(input$file1)) {
         dataFile <- input$file1
-        survey_data <- read.csv(dataFile$datapath, header = TRUE)
+        survey_data <- read.csv(dataFile$datapath,na.strings = c(""," ","NA"),header = TRUE)
       } else{
         survey_data <- as.data.frame(matrix(ncol=1,nrow=1,"No Data Uploaded"))
       }
@@ -1265,6 +1265,7 @@ observe({
     return(length(unique(no_blank_data[,input$tree_target_var])))
 
   })
+
 
   #outputting the frame to populate the table and categorical chart
   tree_model <- eventReactive(input$UseTheseVars_tree, {

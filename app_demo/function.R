@@ -8,7 +8,11 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
     cpinput = -0.01
   }
   
-  test_data = filter(original_data,(!!as.symbol(target_var)) != "")
+  test_data = filter(original_data,!is.na((!!as.symbol(target_var))))
+  # test_data = filter(original_data,(!!as.symbol(target_var)) != "")
+  # print("hihihihih")
+  # print(unique(test_data[,target_var]))
+  # print(length(unique(test_data[,target_var])))
 
   #progress bar
   withProgress(message = "Assessing all potential datacuts...", value = 0, {
@@ -47,6 +51,8 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
           model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         }
         
+        #CHANGE
+        print(model$frame)
         
         #choosing only the leaves
         if(nrow(model$frame)<=1){
@@ -85,9 +91,7 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
           masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(y\\)",y)},error = function(err){return(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)])})
           masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(z\\)",z)},error = function(err){return(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)])})
          
-          ##CHANGE
-          print("model frame")
-          print(model$frame$yval2)
+          
           #overall avg
           masterframe[j:(j+numleafs-1),(10+unique_outcomes-1):(9+2*unique_outcomes-1)] = round(t(replicate(numleafs,model$frame$yval2[1,(2+unique_outcomes):(1+2*unique_outcomes)])),2)
           
@@ -233,8 +237,7 @@ masterframe_nodecuts = function(original_data, vars, target_var, min_leaf, cpinp
     cpinput = -0.01
   }
     
-  test_data = filter(original_data,(!!as.symbol(target_var)) != "")
-
+  test_data = filter(original_data,!is.na((!!as.symbol(target_var))))
   
     if(!(class(test_data[,target_var]) %in% c("integer","numeric"))){
       ###CATEGORICAL###
