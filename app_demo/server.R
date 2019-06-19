@@ -1283,7 +1283,6 @@ observe({
 
     #creating the output table
     out_table = tree_model()
-    print(out_table)
     out_table$model = 1:nrow(out_table)
     out_table = cbind(out_table[,c('model','n','rule','pvalue')],out_table[,str_detect(colnames(out_table),"avg_")])
     if(nrow(out_table)==1){

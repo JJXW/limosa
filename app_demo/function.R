@@ -19,8 +19,8 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
       #creating the masterframe, note the rows is capped at 10000 for now (do not know how to predict exact rows)
       masterframe = as.data.frame(matrix(nrow = 10000, ncol = (10 + 2*unique_outcomes)))
       colnames = c("Leaf","n","yval",as.character(unique(test_data[,target_var])[order(unique(test_data[,target_var]))]),"w","x","y","z","rule",paste("avg",unique(test_data[,target_var])[order(unique(test_data[,target_var]))],sep="_"),"Dif_Score","pvalue")
-      colnames[colnames==""] = "Blank"
-      colnames[colnames=="avg_"] = "avg_Blank"
+      # colnames[colnames==""] = "Blank"
+      # colnames[colnames=="avg_"] = "avg_Blank"
       colnames(masterframe) = colnames
       var_comb_frame = combn(vars,min(4, length(vars)))
       
@@ -47,6 +47,7 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
           model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         }
         
+        
         #choosing only the leaves
         if(nrow(model$frame)<=1){
           #catching models that do not yield leaves
@@ -65,29 +66,36 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
           masterframe[j:(j+numleafs-1),3] = modframe_sort_leafonly[,5]
           #yval2...
           masterframe[j:(j+numleafs-1),4:(4+unique_outcomes-1)] = round(modframe_yval2s[,(2+unique_outcomes):(1+2*unique_outcomes)],2)
-          
           #vars used
           masterframe[j:(j+numleafs-1),(5+unique_outcomes-1)] = w
           masterframe[j:(j+numleafs-1),(6+unique_outcomes-1)] = tryCatch({x},error = function(err){return("N/A")})
+
           masterframe[j:(j+numleafs-1),(7+unique_outcomes-1)] = tryCatch({y},error = function(err){return("N/A")})
           masterframe[j:(j+numleafs-1),(8+unique_outcomes-1)] = tryCatch({z},error = function(err){return("N/A")})
-          #rules
+
+          #rules 
           mod_rules = rpart.rules(model)
           temprule = rpart.rules(model, nn=T)
           mod_rules2 = mod_rules[match(sort(as.numeric(temprule$nn),decreasing=F),temprule$nn),]
           
+
           masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = trimws(gsub("\\s+"," ",apply(mod_rules2,1,FUN = paste, collapse = " ")))
           masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(w\\)",w)
           masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(x\\)",x)},error = function(err){return(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)])})
           masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(y\\)",y)},error = function(err){return(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)])})
           masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)] = tryCatch({str_replace_all(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)],"get\\(z\\)",z)},error = function(err){return(masterframe[j:(j+numleafs-1),(9+unique_outcomes-1)])})
-          
+         
+          ##CHANGE
+          print("model frame")
+          print(model$frame$yval2)
           #overall avg
           masterframe[j:(j+numleafs-1),(10+unique_outcomes-1):(9+2*unique_outcomes-1)] = round(t(replicate(numleafs,model$frame$yval2[1,(2+unique_outcomes):(1+2*unique_outcomes)])),2)
           
+
           #difference vs average
           #JON TO ASSESS AND CHANGE AS NEEDED
           masterframe[j:(j+numleafs-1),(10+2*unique_outcomes-1)] = round(apply(abs(masterframe[j:(j+numleafs-1),4:(4+unique_outcomes-1)] - masterframe[j:(j+numleafs-1),(10+unique_outcomes-1):(9+2*unique_outcomes-1)]),1,sum),2)
+          
           
           #chi square p value
           
@@ -95,7 +103,6 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
             not_node = model$frame$yval2[1,2:(unique_outcomes+1)]
             chi_tab = data.frame(cbind(modframe_yval2s[k,2:(unique_outcomes+1)],not_node))
             chi_tab = filter(chi_tab, not_node !=0)
-            print(chi_tab)
             masterframe$pvalue[j+k-1] = round(chisq.test(chi_tab)$p.value,2)
           }
           
@@ -110,7 +117,7 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
       masterframe = masterframe[!duplicated(masterframe$rule),]
       masterframe = masterframe[masterframe$pvalue < pvalue_thresh,]
       masterframe = masterframe[order(masterframe$pvalue,decreasing = F),]
-      
+
       #end if
     } else {
       
@@ -235,8 +242,8 @@ masterframe_nodecuts = function(original_data, vars, target_var, min_leaf, cpinp
       #creating the masterframe, note the rows is capped at 10000 for now (do not know how to predict exact rows)
       masterframe = as.data.frame(matrix(nrow = 10000, ncol = (10 + 2*unique_outcomes)))
       colnames = c("Leaf","n","yval",as.character(unique(test_data[,target_var])[order(unique(test_data[,target_var]))]),"w","x","y","z","rule",paste("avg",unique(test_data[,target_var])[order(unique(test_data[,target_var]))],sep="_"),"Dif_Score","pvalue")
-      colnames[colnames==""] = "Blank"
-      colnames[colnames=="avg_"] = "avg_Blank"
+      # colnames[colnames==""] = "Blank"
+      # colnames[colnames=="avg_"] = "avg_Blank"
       colnames(masterframe) = colnames
       var_comb_frame = combn(vars,min(4, length(vars)))
       
@@ -315,7 +322,6 @@ masterframe_nodecuts = function(original_data, vars, target_var, min_leaf, cpinp
             not_node = model$frame$yval2[1,2:(unique_outcomes+1)]
             chi_tab = data.frame(cbind(modframe_yval2s[k,2:(unique_outcomes+1)],not_node))
             chi_tab = filter(chi_tab, not_node !=0)
-            print(chi_tab)
             masterframe$pvalue[j+k-1] = round(chisq.test(chi_tab)$p.value,2)
           }
           
