@@ -8,7 +8,7 @@ server <- function(input, output, session) {
 
       if(!is.null(input$file1)) {
         dataFile <- input$file1
-        survey_data <- read.csv(dataFile$datapath)
+        survey_data <- read.csv(dataFile$datapath, header = TRUE)
       } else{
         survey_data <- as.data.frame(matrix(ncol=1,nrow=1,"No Data Uploaded"))
       }
@@ -1261,7 +1261,8 @@ observe({
 
 
   unique_outcomes <- eventReactive(input$UseTheseVars_tree, {
-    return(length(unique(survey_data_reactive()[,input$tree_target_var])))
+    no_blank_data <- filter(survey_data_reactive(),(!!as.symbol(input$tree_target_var)) != "")
+    return(length(unique(no_blank_data[,input$tree_target_var])))
 
   })
 
@@ -1282,6 +1283,7 @@ observe({
 
     #creating the output table
     out_table = tree_model()
+    print(out_table)
     out_table$model = 1:nrow(out_table)
     out_table = cbind(out_table[,c('model','n','rule','pvalue')],out_table[,str_detect(colnames(out_table),"avg_")])
     if(nrow(out_table)==1){
@@ -1351,7 +1353,7 @@ observe({
         overalldata <- rename(overalldata, Target_Variable = Var1)
         
         p  <- ggplot(overalldata, aes(x = overall, y = Freq, fill = Target_Variable)) +
-          geom_col() +
+          geom_col() + scale_y_continuous(labels = scales::percent_format()) +
           geom_text(aes(label = ""),
                     position = position_stack(vjust = 0.5)) +
           scale_fill_brewer(palette = "Set2") +

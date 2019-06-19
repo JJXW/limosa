@@ -1,6 +1,6 @@
 
 
-masterframeFX = function(test_data, vars, target_var, min_leaf, cpinput, unique_outcomes, pvalue_thresh){
+masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, unique_outcomes, pvalue_thresh){
   
   if(cpinput == TRUE){
     cpinput = 0.01
@@ -8,6 +8,8 @@ masterframeFX = function(test_data, vars, target_var, min_leaf, cpinput, unique_
     cpinput = -0.01
   }
   
+  test_data = filter(original_data,(!!as.symbol(target_var)) != "")
+
   #progress bar
   withProgress(message = "Assessing all potential datacuts...", value = 0, {
     
@@ -91,7 +93,9 @@ masterframeFX = function(test_data, vars, target_var, min_leaf, cpinput, unique_
           
           for(k in 1:numleafs){
             not_node = model$frame$yval2[1,2:(unique_outcomes+1)]
-            chi_tab = cbind(modframe_yval2s[k,2:(unique_outcomes+1)],not_node)
+            chi_tab = data.frame(cbind(modframe_yval2s[k,2:(unique_outcomes+1)],not_node))
+            chi_tab = filter(chi_tab, not_node !=0)
+            print(chi_tab)
             masterframe$pvalue[j+k-1] = round(chisq.test(chi_tab)$p.value,2)
           }
           
@@ -101,7 +105,7 @@ masterframeFX = function(test_data, vars, target_var, min_leaf, cpinput, unique_
         incProgress(1/ncol(var_comb_frame))
         Sys.sleep(0.01)
       }
-      
+
       #removing duplicates from the model (e.g., two different groups of 4 vars give the same outputted best tree) and sorting by Dif_Score
       masterframe = masterframe[!duplicated(masterframe$rule),]
       masterframe = masterframe[masterframe$pvalue < pvalue_thresh,]
@@ -215,13 +219,16 @@ masterframeFX = function(test_data, vars, target_var, min_leaf, cpinput, unique_
 
 
 ####OUTPUTTING THE LIST OF DATAFRAMES FOR NUMERIC BOXPLOT OUTPUT####
-masterframe_nodecuts = function(test_data, vars, target_var, min_leaf, cpinput, unique_outcomes, pvalue_thresh){
+masterframe_nodecuts = function(original_data, vars, target_var, min_leaf, cpinput, unique_outcomes, pvalue_thresh){
   if(cpinput == TRUE){
     cpinput = 0.01
   } else{
     cpinput = -0.01
   }
     
+  test_data = filter(original_data,(!!as.symbol(target_var)) != "")
+
+  
     if(!(class(test_data[,target_var]) %in% c("integer","numeric"))){
       ###CATEGORICAL###
       
@@ -300,8 +307,15 @@ masterframe_nodecuts = function(test_data, vars, target_var, min_leaf, cpinput, 
           #chi square p value
           
           for(k in 1:numleafs){
+            # not_node = model$frame$yval2[1,2:(unique_outcomes+1)]
+            # chi_tab = cbind(modframe_yval2s[k,2:(unique_outcomes+1)],not_node)
+            # masterframe$pvalue[j+k-1] = round(chisq.test(chi_tab)$p.value,2)
+            
+            
             not_node = model$frame$yval2[1,2:(unique_outcomes+1)]
-            chi_tab = cbind(modframe_yval2s[k,2:(unique_outcomes+1)],not_node)
+            chi_tab = data.frame(cbind(modframe_yval2s[k,2:(unique_outcomes+1)],not_node))
+            chi_tab = filter(chi_tab, not_node !=0)
+            print(chi_tab)
             masterframe$pvalue[j+k-1] = round(chisq.test(chi_tab)$p.value,2)
           }
           

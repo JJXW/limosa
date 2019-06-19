@@ -6,7 +6,7 @@ sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Data Upload & Summary", tabName = "dashboard"),
     menuItem("Prediction Finder", tabName = "tree"),
-    menuItem("Segment Suggestor", tabName = "ctreeseg"),
+    # menuItem("Segment Suggestor", tabName = "ctreeseg"),
     menuItem("Info & Contact", tabName = "help")
     # ,
     # menuItem("Auto-Segment", tabName = "analysis"),
