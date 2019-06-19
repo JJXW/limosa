@@ -1341,7 +1341,8 @@ observe({
           ggplot() +
           geom_bar(aes(y=value, x=model, fill = variable),
                    data = plot_data,
-                   stat = 'identity', position = "fill") 
+                   stat = 'identity', position = "fill") +
+          scale_y_continuous(labels = scales::percent_format())
         
         #using plotly so we can hover
         p <- ggplotly(p) %>%
@@ -1353,7 +1354,7 @@ observe({
         overalldata <- rename(overalldata, Target_Variable = Var1)
         
         p  <- ggplot(overalldata, aes(x = overall, y = Freq, fill = Target_Variable)) +
-          geom_col() + 
+          geom_col() + scale_y_continuous(labels = scales::percent_format()) +
           geom_text(aes(label = ""),
                     position = position_stack(vjust = 0.5)) +
           scale_fill_brewer(palette = "Set2") +
