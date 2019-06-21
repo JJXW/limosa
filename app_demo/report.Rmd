@@ -3,9 +3,7 @@ title: "Prediction Finder Report"
 classoption: landscape
   
 always_allow_html: yes
-output: 
-  bookdown::pdf_document2:
-    toc: no
+
 ---
 
 Your target variable was $`r input$tree_target_var`$

@@ -59,28 +59,28 @@ body <- dashboardBody(
             column(3,
                      selectInput("segvar1",
                                  "Variable 1: Select",
-                                 c('',colnames(survey_data_default)),
+                                 c('',""),
                                  multiple = F)
                      
               ),
             column(3,
                      selectInput("segvar2",
                                  "Variable 2: Select",
-                                 c('',colnames(survey_data_default)),
+                                 c('',""),
                                  selected = NULL,
                                  multiple = F)
               ), 
             column(3,
                     selectInput("segvar3",
                                 "Variable 3: Select",
-                                c('',colnames(survey_data_default)),
+                                c('',""),
                                 selected = NULL,
                                 multiple = F)
             ),
             column(3,
                    selectInput("segvar4",
                                "Variable 4: Select",
-                               c('',colnames(survey_data_default)),
+                               c('',""),
                                selected = NULL,
                                multiple = F)
             )
@@ -148,7 +148,7 @@ body <- dashboardBody(
          fluidRow(
            column(2,selectInput("segment_var_1",
                        "Variable 1:",
-                       c('',colnames(survey_data_default)),
+                       c('',""),
                        multiple = F)),
            column(2,selectInput("type_var_1",
                        "Type:",
@@ -164,47 +164,47 @@ body <- dashboardBody(
          fluidRow(
            column(2,selectInput("segment_var_2",
                        "Variable 2:",
-                       c('',colnames(survey_data_default)),
+                       c('',""),
                        multiple = F))
            ,
            column(2,selectInput("type_var_2",
                        "Type:",
                        c("","categorical","numeric"),
                        multiple = F)),
-           column(2,selectInput("var2_seg1","Pick Range",choices = colnames(survey_data_default),multiple = T)),
-           column(2,selectInput("var2_seg2","Pick Range",choices = colnames(survey_data_default),multiple = T)),
-           column(2,selectInput("var2_seg3","Pick Range",choices = colnames(survey_data_default),multiple = T)),
-           column(2,selectInput("var2_seg4","Pick Range",choices = colnames(survey_data_default),multiple = T))
+           column(2,selectInput("var2_seg1","Pick Range",choices = "",multiple = T)),
+           column(2,selectInput("var2_seg2","Pick Range",choices = "",multiple = T)),
+           column(2,selectInput("var2_seg3","Pick Range",choices = "",multiple = T)),
+           column(2,selectInput("var2_seg4","Pick Range",choices = "",multiple = T))
          ),
          fluidRow(
            column(2,selectInput("segment_var_3",
                        "Variable 3:",
-                       c('',colnames(survey_data_default)),
+                       c('',""),
                        multiple = F))
            ,
            column(2,selectInput("type_var_3",
                        "Type:",
                        c("","categorical","numeric"),
                        multiple = F)),
-           column(2,selectInput("var3_seg1","Pick Range",choices = colnames(survey_data_default),multiple = T)),
-           column(2,selectInput("var3_seg2","Pick Range",choices = colnames(survey_data_default),multiple = T)),
-           column(2,selectInput("var3_seg3","Pick Range",choices = colnames(survey_data_default),multiple = T)),
-           column(2,selectInput("var3_seg4","Pick Range",choices = colnames(survey_data_default),multiple = T))
+           column(2,selectInput("var3_seg1","Pick Range",choices = "",multiple = T)),
+           column(2,selectInput("var3_seg2","Pick Range",choices = "",multiple = T)),
+           column(2,selectInput("var3_seg3","Pick Range",choices = "",multiple = T)),
+           column(2,selectInput("var3_seg4","Pick Range",choices = "",multiple = T))
          ),
          fluidRow(
            column(2,selectInput("segment_var_4",
                        "Variable 4:",
-                       c('',colnames(survey_data_default)),
+                       c('',""),
                        multiple = F))
            ,
            column(2,selectInput("type_var_4",
                        "Type:",
                        c("","categorical","numeric"),
                        multiple = F)),
-           column(2,selectInput("var4_seg1","Pick Range",choices = colnames(survey_data_default),multiple = T)),
-           column(2,selectInput("var4_seg2","Pick Range",choices = colnames(survey_data_default),multiple = T)),
-           column(2,selectInput("var4_seg3","Pick Range",choices = colnames(survey_data_default),multiple = T)),
-           column(2,selectInput("var4_seg4","Pick Range",choices = colnames(survey_data_default),multiple = T))
+           column(2,selectInput("var4_seg1","Pick Range",choices = "",multiple = T)),
+           column(2,selectInput("var4_seg2","Pick Range",choices = "",multiple = T)),
+           column(2,selectInput("var4_seg3","Pick Range",choices = "",multiple = T)),
+           column(2,selectInput("var4_seg4","Pick Range",choices = "",multiple = T))
          )),
          
          ##END OF SELECTION PANE#
@@ -236,7 +236,7 @@ body <- dashboardBody(
               column(3,
                      selectInput("tree_target_var",
                                  "Target Variable",
-                                 c('',colnames(survey_data_default)),
+                                 c('',""),
                                  multiple = F)
                      
               ),
@@ -244,7 +244,7 @@ body <- dashboardBody(
               column(3,
                      selectInput("tree_split_var",
                                  "Range of Variables To Include",
-                                 c('',colnames(survey_data_default)),
+                                 c('',""),
                                  selected = NULL,
                                  multiple = T)
               ))),
@@ -313,14 +313,14 @@ body <- dashboardBody(
            column(3,
                   selectInput("ctree_target_vars",
                               "Segment Drivers",
-                              c('',colnames(survey_data_default)),
+                              c('',""),
                               multiple = T)
            ),
            
            column(4,
                   selectInput("ctree_split_vars",
                               "Result Variables to Maximize Segment Differences",
-                              c('',colnames(survey_data_default)),
+                              c('',""),
                               selected = NULL,
                               multiple = T)
            )),
