@@ -1285,7 +1285,15 @@ observe({
     #creating the output table
     out_table = tree_model()
     out_table$model = 1:nrow(out_table)
-    out_table = cbind(out_table[,c('model','n','rule','pvalue')],out_table[,str_detect(colnames(out_table),"avg_")])
+    
+    #allowing the right column name for numeric average (it was outputting oddly)
+    if(!(class(survey_data_reactive()[,input$tree_target_var]) %in% c("integer","numeric"))){
+      out_table = cbind(out_table[,c('model','n','rule','pvalue')],out_table[,str_detect(colnames(out_table),"avg_")])
+      
+    } else{
+      out_table = cbind(out_table[,c('model','n','rule','pvalue')],Overall_Average = out_table[,str_detect(colnames(out_table),"avg_")])
+      
+    }
     if(nrow(out_table)==1){
       out_table[1,2] = "No models found that improve prediction beyond the average distribution"
     }
@@ -1305,12 +1313,45 @@ observe({
   #download this table
   output$report = downloadHandler(
     filename = function() {
-      "yoursegements.csv"
+      paste("Prediction Finder Report"," [",Sys.Date(),"].csv")
     },
     content = function(file){
       write.csv(out_table(), file)
     }
   )
+  
+  #download the plotly that is outputted below
+  output$mainchart = downloadHandler(
+    filename = function() {
+      paste("Prediction Finder Report"," [",Sys.Date(),"].png")
+    },
+    content = function(file){
+      export(plot_1(), file=file)
+    }
+  )
+  
+  #code trying to download the rmarkdown file
+  # output$report <- downloadHandler(
+  #   filename = function() {
+  #     paste("Prediction Finder Report"," [",Sys.Date(),"]")
+  #   },
+  # 
+  #   content = function(file) {
+  #     src <- normalizePath('report.Rmd')
+  # 
+  #     # temporarily switch to the temp dir, in case you do not have write
+  #     # permission to the current working directory
+  #     owd <- setwd(tempdir())
+  #     on.exit(setwd(owd))
+  #     file.copy(src, 'report.Rmd', overwrite = TRUE)
+  # 
+  #     library(rmarkdown)
+  #     out <- render('report.Rmd', pdf_document()
+  # 
+  #     )
+  #     file.rename(out, file)
+  #   }
+  # )
 
 
 
@@ -1351,15 +1392,15 @@ observe({
       else{
         overalldata = as.data.frame(table(survey_data_reactive()[,input$tree_target_var]))
         overalldata$overall = "Overall"
-        overalldata <- rename(overalldata, Target_Variable = Var1)
+        colnames(overalldata)[match('Var1',colnames(overalldata))] <- 'Target_Variable'
         
         p  <- ggplot(overalldata, aes(x = overall, y = Freq, fill = Target_Variable)) +
-          geom_col() + scale_y_continuous(labels = scales::percent_format()) +
+          geom_col() +
           geom_text(aes(label = ""),
                     position = position_stack(vjust = 0.5)) +
           scale_fill_brewer(palette = "Set2") +
           theme_minimal(base_size = 16) +
-          ylab("Value") +
+          ylab(input$tree_target_var) +
           xlab(NULL)
         
         p <- ggplotly(p)
@@ -1396,6 +1437,12 @@ observe({
       p <- ggplotly(p) %>% layout(autosize = T)
     }
     }
+    
+    
+  #this commented out code was to allow us to render a png in the final downloadable pdf however I could not figure
+  #out how to have Rmarkdown search the correct file path when this saves the image in the working directory
+  # orca(p, "temp.png")
+    
     return(p)
     
   })
@@ -1404,6 +1451,7 @@ observe({
    plot_1()
 
   })
+
 
 
 ####CONDITIONAL INFERENCE TREE SEGMENTATION####

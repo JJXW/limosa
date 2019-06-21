@@ -128,8 +128,8 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
       ###NUMERIC###
       masterframe = as.data.frame(matrix(nrow = 10000, ncol = (11)))
       colnames = c("Leaf","n","yval","w","x","y","z","rule","avg_yval","Dif_Score","pvalue")
-      colnames[colnames==""] = "Blank"
-      colnames[colnames=="avg_"] = "avg_Blank"
+      # colnames[colnames==""] = "Blank"
+      # colnames[colnames=="avg_"] = "avg_Blank"
       colnames(masterframe) = colnames
       var_comb_frame = combn(vars,min(4, length(vars)))
       

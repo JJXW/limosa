@@ -19,7 +19,9 @@ library(partykit)
 library(stringr)
 library(plotly)
 library(knitr)
+library(kableExtra)
+library(tinytex)
+library(webshot)
 
 
-survey_data_default <- read.csv('intellisurvey_demo.csv')
 source('function.R')

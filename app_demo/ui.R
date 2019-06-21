@@ -9,7 +9,7 @@ sidebar <- dashboardSidebar(
     # menuItem("Segment Suggestor", tabName = "ctreeseg"),
     menuItem("Info & Contact", tabName = "help")
     # ,
-    # menuItem("Auto-Segment", tabName = "analysis"),
+    # menuItem("Auto-Segment", tabName = "analysis")
     # menuItem("Segment Storyliner", tabName = "manual")
     
   )
@@ -258,7 +258,7 @@ body <- dashboardBody(
               column(3,
                      numericInput("pvalue_thresh",
                                   "Advanced Parameter: Max pvalue to include",
-                                  value = 0.1,step = 0.01
+                                  value = 0.5,step = 0.01
                      )
               ),
               column(3,
@@ -276,7 +276,8 @@ body <- dashboardBody(
           fluidRow(DT::dataTableOutput("tableTREE"))
           ,
           fluidRow(
-            downloadButton("report", "Download Table")
+            downloadButton("report", "Download Table"),
+            downloadButton("mainchart", "Download Chart")
           )
           
     ),

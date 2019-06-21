@@ -1,0 +1,28 @@
+---
+title: "Prediction Finder Report"
+classoption: landscape
+  
+always_allow_html: yes
+output: 
+  bookdown::pdf_document2:
+    toc: no
+---
+
+Your target variable was $`r input$tree_target_var`$
+
+&nbsp;
+
+The variables you included were  $`r input$tree_split_var`$
+
+&nbsp;
+
+```{r table,echo=FALSE}
+kable(out_table(),format = "latex")
+```
+
+
+
+
+```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '100%'}
+knitr::include_graphics(temp.png)
+```
