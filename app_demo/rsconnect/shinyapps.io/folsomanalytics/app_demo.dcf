@@ -5,6 +5,6 @@ account: folsomanalytics
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 784511
-bundleId: 2169389
+bundleId: 2169412
 url: https://folsomanalytics.shinyapps.io/app_demo/
-when: 1561129991.62047
+when: 1561130618.36929

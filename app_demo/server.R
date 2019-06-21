@@ -1377,6 +1377,7 @@ observe({
         
         model_data$model <- c(nrow(model_data), 1:(nrow(model_data)-1))
         plot_data <-melt(model_data, id=c(1:3, ncol(model_data)), measure=4:(unique_outcomes+3))
+        plot_data$value = round(plot_data$value,2)
 
         p <-
           ggplot() +
