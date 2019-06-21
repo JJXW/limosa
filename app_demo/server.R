@@ -1313,7 +1313,7 @@ observe({
   #download this table
   output$report = downloadHandler(
     filename = function() {
-      paste("Prediction Finder Report"," [",Sys.Date(),"].csv")
+      paste("Prediction Finder Report"," [",Sys.time(),"].csv")
     },
     content = function(file){
       write.csv(out_table(), file)
@@ -1323,7 +1323,7 @@ observe({
   #download the plotly that is outputted below
   output$mainchart = downloadHandler(
     filename = function() {
-      paste("Prediction Finder Report"," [",Sys.Date(),"].png")
+      paste("Prediction Finder Report"," [",Sys.time(),"].png")
     },
     content = function(file){
       export(plot_1(), file=file)
@@ -1377,12 +1377,12 @@ observe({
         
         model_data$model <- c(nrow(model_data), 1:(nrow(model_data)-1))
         plot_data <-melt(model_data, id=c(1:3, ncol(model_data)), measure=4:(unique_outcomes+3))
-        
+
         p <-
           ggplot() +
           geom_bar(aes(y=value, x=model, fill = variable),
                    data = plot_data,
-                   stat = 'identity', position = "fill") +
+                   stat = 'identity', position = "fill") + ylab(input$tree_target_var) +
           scale_y_continuous(labels = scales::percent_format())
         
         #using plotly so we can hover
@@ -1422,7 +1422,8 @@ observe({
       model_label_2 = rep("Overall",length(survey_data_reactive()[,input$tree_target_var]))
       model_string = c(model_label_1, model_label_2)
       
-      p <- ggplot(data.frame(Target_Variable = response_string, Model = factor(model_string)), aes(x=Model, y=Target_Variable, fill=Model)) + geom_boxplot()
+      p <- ggplot(data.frame(Target_Variable = response_string, Model = factor(model_string)), aes(x=Model, y=Target_Variable, fill=Model)) + geom_boxplot() +
+        ylab(input$tree_target_var)
       
       p <- ggplotly(p) %>% layout(autosize = T)
       
@@ -1432,7 +1433,8 @@ observe({
       response_string = survey_data_reactive()[,input$tree_target_var]
       model_string = rep(1, length(response_string))
       
-      p <- ggplot(data.frame(Target_Variable = response_string, Overall = factor(model_string)), aes(x=Overall, y=Target_Variable, fill=Overall)) + geom_boxplot()
+      p <- ggplot(data.frame(Target_Variable = response_string, Overall = factor(model_string)), aes(x=Overall, y=Target_Variable, fill=Overall)) + geom_boxplot() +
+        ylab(input$tree_target_var)
       
       p <- ggplotly(p) %>% layout(autosize = T)
     }
