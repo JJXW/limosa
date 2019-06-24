@@ -1378,6 +1378,7 @@ observe({
         model_data$model <- c(nrow(model_data), 1:(nrow(model_data)-1))
         plot_data <-melt(model_data, id=c(1:3, ncol(model_data)), measure=4:(unique_outcomes+3))
         plot_data$value = round(plot_data$value,2)
+        
 
         p <-
           ggplot() +
@@ -1387,6 +1388,7 @@ observe({
           scale_y_continuous(labels = scales::percent_format())
         
         #using plotly so we can hover
+        options(digits = 2)
         p <- ggplotly(p) %>%
           layout(xaxis = list(tickvals = c(1:nrow(model_data)), ticktext = c(1:(nrow(model_data)-2),"","Avg")))
       }
