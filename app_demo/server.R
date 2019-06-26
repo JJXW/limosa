@@ -1424,12 +1424,14 @@ observe({
       model_label_1 = (c(rep(1:length(response_data),sapply(response_data, FUN = function(x) (length(x[,ncol(x)]))))))
       model_label_2 = rep("Overall",length(survey_data_reactive()[,input$tree_target_var]))
       model_string = c(model_label_1, model_label_2)
+      xform = list(categoryorder = "array", categoryarray = unique(model_string))
       
-      p <- ggplot(data.frame(Target_Variable = response_string, Model = factor(model_string)), aes(x=Model, y=Target_Variable, fill=Model)) + geom_boxplot() +
+      sort_levels = c(rep(1:length(response_data)),"Avg")
+      
+      p <- ggplot(data.frame(Target_Variable = response_string, Model = factor(model_string, levels = sort_levels, ordered = TRUE )), aes(x=Model, y=Target_Variable, fill=Model)) + geom_boxplot() +
         ylab(input$tree_target_var)
       
       p <- ggplotly(p) %>% layout(autosize = T)
-      
       }
     
     else{
