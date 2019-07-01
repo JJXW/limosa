@@ -6,10 +6,10 @@ sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Data Upload & Summary", tabName = "dashboard"),
     menuItem("Prediction Finder", tabName = "tree"),
-    # menuItem("Segment Suggestor", tabName = "ctreeseg"),
+    menuItem("Difference Finder", tabName = "diffy"),
     menuItem("Info & Contact", tabName = "help")
     # ,
-    # menuItem("Auto-Segment", tabName = "analysis")
+    # menuItem("Auto-Segment  ", tabName = "analysis")
     # menuItem("Segment Storyliner", tabName = "manual")
     
   )
@@ -304,32 +304,39 @@ body <- dashboardBody(
         br(),
          "Phone Number: 714-745-0455"
          ),
- tabItem("ctreeseg",
-         fluidRow(titlePanel("Segment Suggestor")),
+ tabItem("diffy",
+         fluidRow(titlePanel("Difference Finder")),
           br(),
-         mainPanel("This tool uses conditional inference trees to suggest powerful data splits in variables that maximally segment outcomes you care about."),
+         mainPanel("This tool uses allows you to search a whole range of data to find which show significant trends when split by a categorical variable of your choice"),
+         br(),
          br(),
          wellPanel(fluidRow(
            column(3,
-                  selectInput("ctree_target_vars",
-                              "Segment Drivers",
+                  selectInput("diff_split_var",
+                              "Cut The Data By...",
                               c('',""),
-                              multiple = T)
+                              multiple = F)
            ),
            
            column(4,
-                  selectInput("ctree_split_vars",
-                              "Result Variables to Maximize Segment Differences",
+                  selectInput("diff_range_vars",
+                              "Search For Trends Over...",
                               c('',""),
                               selected = NULL,
                               multiple = T)
            )),
-           
            fluidRow(
-             column(2,actionButton("UseTheseVars_ctree", "Choose These Variables & Run"))
+             column(3, numericInput("pvalue_diffy",
+                          "Advanced Parameter: Max pvalue to include",
+                          value = 0.5,step = 0.01
+             ))
            ),
            
-           plotOutput("ctree_plot")
+           fluidRow(
+             column(2,actionButton("UseTheseVars_diffy", "Choose These Variables & Run"))
+           ),
+           
+           fluidRow(DT::dataTableOutput("DiffyTable"))
            )
  )
 )

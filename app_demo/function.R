@@ -51,8 +51,6 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
           model = rpart(get(target_var) ~ get(w), data = test_data, control = rpart.control(cp = cpinput, minbucket = min_leaf))
         }
         
-        #CHANGE
-        print(model$frame)
         
         #choosing only the leaves
         if(nrow(model$frame)<=1){
@@ -107,6 +105,7 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
             not_node = model$frame$yval2[1,2:(unique_outcomes+1)]
             chi_tab = data.frame(cbind(modframe_yval2s[k,2:(unique_outcomes+1)],not_node))
             chi_tab = filter(chi_tab, not_node !=0)
+            print(chi_tab)
             masterframe$pvalue[j+k-1] = round(chisq.test(chi_tab)$p.value,2)
           }
           

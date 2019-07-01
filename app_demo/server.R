@@ -1424,9 +1424,9 @@ observe({
       model_label_1 = (c(rep(1:length(response_data),sapply(response_data, FUN = function(x) (length(x[,ncol(x)]))))))
       model_label_2 = rep("Overall",length(survey_data_reactive()[,input$tree_target_var]))
       model_string = c(model_label_1, model_label_2)
-      xform = list(categoryorder = "array", categoryarray = unique(model_string))
-      
-      sort_levels = c(rep(1:length(response_data)),"Avg")
+
+      sort_levels = c(unique(model_string))
+      # sort_levels = c((rep(1:length(response_data))-1),"Avg")
       
       p <- ggplot(data.frame(Target_Variable = response_string, Model = factor(model_string, levels = sort_levels, ordered = TRUE )), aes(x=Model, y=Target_Variable, fill=Model)) + geom_boxplot() +
         ylab(input$tree_target_var)
@@ -1461,32 +1461,80 @@ observe({
 
 
 
-####CONDITIONAL INFERENCE TREE SEGMENTATION####
+####DIFFERENCE FINDER####
 
 observe({values <- colnames(survey_data_reactive())
 
 #MAKING SURE VARIABLES UPDATE ACROSS SELECTION VARIABLES#
 #automatic segmentation
-updateSelectInput(session,"ctree_target_vars",label = "Segment Drivers",choices = c('',values))
-updateSelectInput(session,"ctree_split_vars",label = "Result Variables to Maximize Segment Differences",choices = c('',values))
+updateSelectInput(session,"diff_split_var",label = "Cut The Data By...",choices = c('',values))
+updateSelectInput(session,"diff_range_vars",label = "Search For Trends Over...",choices = c('',values))
 })
   
-ctree_model <- eventReactive(input$UseTheseVars_ctree,{
-  f <- as.formula(
-    paste(
-      paste(input$ctree_split_vars, collapse = " + "),
-          paste(input$ctree_target_vars, collapse = " + "), 
-          sep = " ~ "))
+
+diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
+#Upfront variable definition
+  split = input$diff_split_var
+  search = input$diff_range_vars
+  class_of_alldata = sapply(colnames(survey_data_reactive()), FUN = function(x) class(survey_data_reactive()[,x]))
+  class_of_search = class_of_alldata[match(search,names(class_of_alldata))]
+  numbof_numeric = sum(class_of_search %in% c("integer","numeric"))
+  search_numeric = names(class_of_search)[class_of_search %in% c("integer","numeric")]
+  numbof_categorical = sum(!class_of_search %in% c("integer","numeric"))
+  search_categorical = names(class_of_search)[!(class_of_search %in% c("integer","numeric"))]
+
+  print(numbof_categorical)
+  print(numbof_numeric)
   
-  return(ctree(f, data = survey_data_reactive(), na.action = na.omit))
+  
+#running numeric
+  mlml_num = fulldata_numeric(numbof_numeric,survey_data_reactive(), split, search_numeric)
+  numstep1 = num_splitframe(numbof_numeric,mlml_num, split, search)
+  numstep2 = num_frame(numbof_numeric,mlml_num,numstep1,search)
+  numstep3 = num_split_mean_frame(numbof_numeric,mlml_num,numstep1,search)
+  numstep4 = num_overall_mean_frame(numbof_numeric,mlml_num, numstep1, search)
+  numstep5 = num_category_split(numbof_numeric,mlml_num,split,search)
+  numstep6 = num_question_list(numbof_numeric,mlml_num,split,search)
+  numstep7 = numbey_frame(numbof_numeric,numstep5,numstep6,numstep2,numstep3,numstep4,split)
+  
+
+#running categorical
+  mlml_cat = fulldata_categorical(numbof_categorical,survey_data_reactive(), split, search_categorical)
+  catstep1 = cat_splitframe(numbof_categorical,mlml_cat, split)
+  catstep2 = cat_frame(numbof_categorical,mlml_cat,catstep1,search)
+  catstep3 = cat_split_mean_frame(numbof_categorical,mlml_cat,catstep1,search)
+  catstep4 = cat_overall_mean_frame(numbof_categorical,mlml_cat,catstep1,search)
+  catstep5 = cat_category_split(numbof_categorical,catstep1,search_categorical)
+  catstep6 = cat_variable_list(numbof_categorical,mlml_cat, catstep1, search)
+  catstep7 = answer_list(numbof_categorical,mlml_cat, catstep1, search)
+  catstep8 = cattey_frame(numbof_categorical,catstep5,catstep6,catstep7,catstep2,catstep3,catstep4,split)
+  
+  if((numbof_categorical>0) & (numbof_numeric>0)){
+    final = rbind(catstep8,numstep7) #both numerical and categorical
+  }
+  else if((numbof_categorical>0) & (numbof_numeric==0)){
+    final = catstep8
+  }
+  else if((numbof_categorical==0) & (numbof_numeric>0)){
+    final = numstep7
+  }
+ 
+#filtering and completing the table
+  final = filter(final,pval<=input$pvalue_diffy)
+  final = final[,c('cat','var','ans','rule','pval','mean_cat','mean_overall')]
+  final = final[order(final$cat,final$var,final$pval),]
+  colnames(final) = c("Split_Value", "Question","Response","Insight","P-Value","Subset_Mean","Overall_Mean")
+
+  
+  return(final)
+
+})#close diffy tree
+  
+output$DiffyTable <- DT::renderDataTable({
+  DT::datatable(data = diffs_tree(),
+                options = list(scrollX = T))
   
 })
 
 
-output$ctree_plot <- renderPlot({
-  plot(ctree_model(),margins = c(3, 0, 0, 0),
-       tp_args = list(rot = 45, just = c("right", "top")))
-  })
-
-
-}
+}#close server block
