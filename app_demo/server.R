@@ -1504,7 +1504,7 @@ diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
   catstep2 = cat_frame(numbof_categorical,mlml_cat,catstep1,search)
   catstep3 = cat_split_mean_frame(numbof_categorical,mlml_cat,catstep1,search)
   catstep4 = cat_overall_mean_frame(numbof_categorical,mlml_cat,catstep1,search)
-  catstep5 = cat_category_split(numbof_categorical,catstep1,search_categorical)
+  catstep5 = cat_category_split(numbof_categorical,mlml_cat,catstep1,search_categorical)
   catstep6 = cat_variable_list(numbof_categorical,mlml_cat, catstep1, search)
   catstep7 = answer_list(numbof_categorical,mlml_cat, catstep1, search)
   catstep8 = cattey_frame(numbof_categorical,catstep5,catstep6,catstep7,catstep2,catstep3,catstep4,split)
