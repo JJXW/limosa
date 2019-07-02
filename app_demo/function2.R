@@ -80,7 +80,7 @@ num_frame = function(number_of_numeric,fulldata, list_of_splitframes,search_cols
   given_pvals = lapply(list_of_splitframes,
                   FUN = function(frame_from_list) sapply(num_search_cols, 
                      FUN = function(search_col) 
-                       if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>0 & length(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col])>0){
+                       if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>2){
                          t.test(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col],filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col])$p.value
                        } else{1}
                           ))
@@ -103,7 +103,7 @@ num_split_mean_frame = function(number_of_numeric,fulldata, list_of_splitframes,
   cat_means = lapply(list_of_splitframes,
                        FUN = function(frame_from_list) sapply(num_search_cols, 
                                                               FUN = function(search_col) 
-                                                                if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>0 & length(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col])>0){
+                                                                if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>2){
                                                                 round(mean(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]),3)}
                                                               else{0}
                                                                 ))
@@ -123,7 +123,7 @@ num_overall_mean_frame = function(number_of_numeric,fulldata, list_of_splitframe
   overall_means = lapply(list_of_splitframes,
                      FUN = function(frame_from_list) sapply(num_search_cols, 
                                                             FUN = function(search_col) 
-                                                              if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>0 & length(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col])){
+                                                              if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>2){
                                                               round(mean(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]),3)}
                                                                 else{0}
                                                                 ))
@@ -207,10 +207,10 @@ cat_frame = function(number_of_categorical,fulldata, list_of_splitframes,search_
                        FUN = function(frame_from_list) sapply(cat_search_cols, 
                                                               FUN = function(search_col) sapply(unique(frame_from_list[,search_col])[unique(frame_from_list[,search_col])!=""],
                                                                                                 FUN = function(question_val) 
-                                                                                                  if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>0 & sum(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>0){
+                                                                                                  if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>4 & sum(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>4){
                                                                                                     t.test(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val,filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)$p.value
-                                                                                                  } else{1}
-                                                              ))) 
+                                                                                                  }
+                                                                                                  ))) 
                                                                                                   
 
                                                                 
@@ -230,7 +230,7 @@ cat_split_mean_frame = function(number_of_categorical,fulldata, list_of_splitfra
   cat_proportions = lapply(list_of_splitframes,
                        FUN = function(frame_from_list) sapply(cat_search_cols, 
                                                               FUN = function(search_col) sapply(unique(frame_from_list[,search_col])[unique(frame_from_list[,search_col])!=""],
-                                                                                                FUN = function(question_val) if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>0 & sum(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>0){
+                                                                                                FUN = function(question_val) if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>4 & sum(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>4){
                                                                                                   sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)/nrow(filter(frame_from_list,!is.na(!!as.symbol(search_col))))
                                                                                                 }
                                                                                                 )))
@@ -253,7 +253,7 @@ cat_overall_mean_frame = function(number_of_categorical,fulldata, list_of_splitf
   overall_proportions = lapply(list_of_splitframes,
                            FUN = function(frame_from_list) sapply(cat_search_cols, 
                                                                   FUN = function(search_col) sapply(unique(frame_from_list[,search_col])[unique(frame_from_list[,search_col])!=""],
-                                                                                                    FUN = function(question_val) if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>0 & sum(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>0){
+                                                                                                    FUN = function(question_val) if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>4){
                                                                                                       sum(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)/nrow(filter(fulldata,!is.na(!!as.symbol(search_col))))
                                                                                                       
                                                                                                     }
@@ -277,7 +277,7 @@ cat_category_split = function(number_of_categorical, fulldata,list_of_splitframe
   catsplits = lapply(list_of_splitframes,
                                FUN = function(frame_from_list) sapply(cat_search_cols, 
                                                                       FUN = function(search_col) sapply(as.character(unique(frame_from_list[,search_col])),
-                                                                                                        FUN = function(question_val) if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>0 & sum(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>0){
+                                                                                                        FUN = function(question_val) if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>4){
                                                                                                           as.character(unlist(unique(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,1])))
                                                                                                         }
                                                                                                         )))
@@ -299,7 +299,7 @@ cat_variable_list = function(number_of_categorical,fulldata, list_of_splitframes
   varseach = lapply(list_of_splitframes,
                                FUN = function(frame_from_list) sapply(cat_search_cols, 
                                                                       FUN = function(search_col) sapply(unique(frame_from_list[,search_col]),
-                                                                                                        FUN = function(question_val) if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>0 & sum(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>0){
+                                                                                                        FUN = function(question_val) if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>4){
                                                                                                           search_col
                                                                                                         }
                                                                                                         )))
@@ -322,7 +322,7 @@ answer_list = function(number_of_categorical,fulldata, list_of_splitframes,searc
   answerseach = lapply(list_of_splitframes,
                     FUN = function(frame_from_list) sapply(cat_search_cols, 
                                                            FUN = function(search_col) sapply(unique(frame_from_list[,search_col]),
-                                                                                             FUN = function(question_val) if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>0 & sum(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>0){
+                                                                                             FUN = function(question_val) if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>4){
                                                                                                as.character(unlist(question_val))
                                                                                              }
                                                                                               )))
@@ -341,7 +341,7 @@ answer_list = function(number_of_categorical,fulldata, list_of_splitframes,searc
 cattey_frame = function(number_of_categorical,cat,var,ans,pval,mean_cat,mean_overall,split_col){
   if(number_of_categorical == 0){return("")}
   else {
-  cattey_dataframe <- cbind.data.frame(cat,var,ans,pval,mean_cat,mean_overall)
+  cattey_dataframe <- cbind.data.frame(cat,var,ans,pval,mean_cat,mean_overall) #ERROR HERE?? "ARGUMENTS IMPLY DIFFERING # OF ROWS" CHECK THIS
   cattey_dataframe$dif = round(((mean_cat - mean_overall)/mean_overall)+1,3)
 
   
