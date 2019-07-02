@@ -334,10 +334,14 @@ body <- dashboardBody(
            
            fluidRow(
              column(2,actionButton("UseTheseVars_diffy", "Choose These Variables & Run"))
-           ),
-           
+           )),
+           br(),
+           br(),
            fluidRow(DT::dataTableOutput("DiffyTable"))
-           )
+           ,
+         fluidRow(
+           downloadButton("report_diffy", "Download Table")
+         )
  )
 )
 )

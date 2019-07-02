@@ -1,6 +1,7 @@
 server <- function(input, output, session) {
   options(shiny.maxRequestSize=30*1024^2) 
   
+  
 ####DATA INPUT AND EXPLORATION####
 
   survey_data_reactive <-
@@ -1473,7 +1474,11 @@ updateSelectInput(session,"diff_range_vars",label = "Search For Trends Over...",
   
 
 diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
-#Upfront variable definition
+
+  #progress bar
+  withProgress(message = "Assessing all potential datacuts...", value = 0, max = 100, {
+  
+  #Upfront variable definition
   split = input$diff_split_var
   search = input$diff_range_vars
   class_of_alldata = sapply(colnames(survey_data_reactive()), FUN = function(x) class(survey_data_reactive()[,x]))
@@ -1483,20 +1488,34 @@ diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
   numbof_categorical = sum(!class_of_search %in% c("integer","numeric"))
   search_categorical = names(class_of_search)[!(class_of_search %in% c("integer","numeric"))]
 
-  print(numbof_categorical)
-  print(numbof_numeric)
+  setProgress(value = 1) 
   
   
 #running numeric
   mlml_num = fulldata_numeric(numbof_numeric,survey_data_reactive(), split, search_numeric)
+  setProgress(value = 5) 
+  
   numstep1 = num_splitframe(numbof_numeric,mlml_num, split, search)
+  setProgress(value = 10) 
+  
   numstep2 = num_frame(numbof_numeric,mlml_num,numstep1,search)
+  setProgress(value = 15) 
+  
   numstep3 = num_split_mean_frame(numbof_numeric,mlml_num,numstep1,search)
+  setProgress(value = 20) 
+  
   numstep4 = num_overall_mean_frame(numbof_numeric,mlml_num, numstep1, search)
+  setProgress(value = 25) 
+  
   numstep5 = num_category_split(numbof_numeric,mlml_num,split,search)
+  setProgress(value = 30) 
+  
   numstep6 = num_question_list(numbof_numeric,mlml_num,split,search)
+  setProgress(value = 35) 
+  
   numstep7 = numbey_frame(numbof_numeric,numstep5,numstep6,numstep2,numstep3,numstep4,split)
   
+  setProgress(value = 40)
 
 #running categorical
   mlml_cat = fulldata_categorical(numbof_categorical,survey_data_reactive(), split, search_categorical)
@@ -1509,6 +1528,9 @@ diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
   catstep7 = answer_list(numbof_categorical,mlml_cat, catstep1, search)
   catstep8 = cattey_frame(numbof_categorical,catstep5,catstep6,catstep7,catstep2,catstep3,catstep4,split)
   
+  setProgress(value = 60)
+  
+  
   if((numbof_categorical>0) & (numbof_numeric>0)){
     final = rbind(catstep8,numstep7) #both numerical and categorical
   }
@@ -1518,6 +1540,10 @@ diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
   else if((numbof_categorical==0) & (numbof_numeric>0)){
     final = numstep7
   }
+  
+  
+  setProgress(value = 80)
+  
  
 #filtering and completing the table
   final = filter(final,pval<=input$pvalue_diffy)
@@ -1525,10 +1551,12 @@ diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
   final = final[order(final$cat,final$var,final$pval),]
   colnames(final) = c("Split_Value", "Question","Response","Insight","P-Value","Subset_Mean","Overall_Mean")
 
+  setProgress(value = 100)
   
   return(final)
 
-})#close diffy tree
+  })
+})#close Difference Finder
   
 output$DiffyTable <- DT::renderDataTable({
   DT::datatable(data = diffs_tree(),
@@ -1536,5 +1564,20 @@ output$DiffyTable <- DT::renderDataTable({
   
 })
 
+
+#download for Difference Finder
+diffytree <- reactive({
+  diffytree = diffs_tree()
+  return(diffytree)
+  })
+
+output$report_diffy = downloadHandler(
+  filename = function() {
+    paste("Difference Finder Report"," [",Sys.time(),"].csv")
+  },
+  content = function(file){
+    write.csv(diffytree(), file)
+  }
+)
 
 }#close server block

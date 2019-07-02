@@ -87,7 +87,7 @@ num_frame = function(number_of_numeric,fulldata, list_of_splitframes,search_cols
 
   
 
-return(as.numeric(round(unlist(given_pvals),2)))
+return(as.numeric(round(unlist(given_pvals),3)))
   }
 }
 
@@ -104,7 +104,7 @@ num_split_mean_frame = function(number_of_numeric,fulldata, list_of_splitframes,
                        FUN = function(frame_from_list) sapply(num_search_cols, 
                                                               FUN = function(search_col) 
                                                                 if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>0 & length(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col])>0){
-                                                                round(mean(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]),2)}
+                                                                round(mean(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]),3)}
                                                               else{0}
                                                                 ))
   
@@ -124,7 +124,7 @@ num_overall_mean_frame = function(number_of_numeric,fulldata, list_of_splitframe
                      FUN = function(frame_from_list) sapply(num_search_cols, 
                                                             FUN = function(search_col) 
                                                               if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>0 & length(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col])){
-                                                              round(mean(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]),2)}
+                                                              round(mean(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]),3)}
                                                                 else{0}
                                                                 ))
   
@@ -167,7 +167,7 @@ numbey_frame = function(number_of_numeric,cat,var,pval,mean_cat,mean_overall,spl
   else {
   ans = rep("",length(cat))
   numbey_dataframe <- cbind.data.frame(cat,var,ans,pval,mean_cat,mean_overall)
-  numbey_dataframe$dif = round((mean_cat - mean_overall)/mean_overall,2)+1
+  numbey_dataframe$dif = round((mean_cat - mean_overall)/mean_overall,3)+1
   
   numbey_dataframe$rule = mapply(function(category, variable, difference,split_column) {
     paste("When ",split_column," is ",category,", ",variable," differs by ", difference,"X vs the overall average",sep = "")
@@ -215,7 +215,7 @@ cat_frame = function(number_of_categorical,fulldata, list_of_splitframes,search_
 
                                                                 
   
-  return(as.numeric(round(unlist(given_pvals),2)))
+  return(as.numeric(round(unlist(given_pvals),3)))
     }
   }
 
@@ -237,7 +237,7 @@ cat_split_mean_frame = function(number_of_categorical,fulldata, list_of_splitfra
                                                             
   
   
-  return(as.numeric(round(unlist(cat_proportions),2)))
+  return(as.numeric(round(unlist(cat_proportions),3)))
   }
 }
 
@@ -261,7 +261,7 @@ cat_overall_mean_frame = function(number_of_categorical,fulldata, list_of_splitf
   
   
   
-  return(as.numeric(round(unlist(overall_proportions),2)))
+  return(as.numeric(round(unlist(overall_proportions),3)))
   }
 }
 
@@ -342,7 +342,7 @@ cattey_frame = function(number_of_categorical,cat,var,ans,pval,mean_cat,mean_ove
   if(number_of_categorical == 0){return("")}
   else {
   cattey_dataframe <- cbind.data.frame(cat,var,ans,pval,mean_cat,mean_overall)
-  cattey_dataframe$dif = round(((mean_cat - mean_overall)/mean_overall)+1,2)
+  cattey_dataframe$dif = round(((mean_cat - mean_overall)/mean_overall)+1,3)
 
   
   cattey_dataframe$rule = mapply(function(category, variable, answer, difference,split_column) {
