@@ -100,6 +100,7 @@ num_split_mean_frame = function(number_of_numeric,fulldata, list_of_splitframes,
   if(number_of_numeric == 0){return("")}
   else {
   num_search_cols = search_cols[search_cols %in% colnames(fulldata)]
+  
   cat_means = lapply(list_of_splitframes,
                        FUN = function(frame_from_list) sapply(num_search_cols, 
                                                               FUN = function(search_col) 

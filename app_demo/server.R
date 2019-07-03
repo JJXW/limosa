@@ -50,7 +50,7 @@ server <- function(input, output, session) {
 
 
    for(i in 1:length(colnames(original_data_form()))){
-     if(classes_updated[i] == "numeric") {survey_data[,i] = as.integer(survey_data[,i])}
+     if(classes_updated[i] == "numeric") {survey_data[,i] = as.numeric(survey_data[,i])}
      else if(classes_updated[i] == "date") {survey_data[,i] = as.Date(survey_data[,i], origin = "1899-12-30")}
        else {survey_data[,i] = as.character(survey_data[,i])}
    }
