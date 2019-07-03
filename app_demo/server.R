@@ -47,8 +47,8 @@ server <- function(input, output, session) {
    
    dataFile <- input$file1
    survey_data <- read.csv(dataFile$datapath,na.strings = c(""," ","NA"),header = TRUE, stringsAsFactors = FALSE, as.is = TRUE)
-   
- 
+
+
    for(i in 1:length(colnames(original_data_form()))){
      if(classes_updated[i] == "numeric") {survey_data[,i] = as.integer(survey_data[,i])}
      else if(classes_updated[i] == "date") {survey_data[,i] = as.Date(survey_data[,i], origin = "1899-12-30")}
