@@ -8,11 +8,9 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
     cpinput = -0.01
   }
   
+  print(c("actual passed class",class(original_data[,target_var])))
   test_data = filter(original_data,!is.na((!!as.symbol(target_var))))
-  # test_data = filter(original_data,(!!as.symbol(target_var)) != "")
-  # print("hihihihih")
-  # print(unique(test_data[,target_var]))
-  # print(length(unique(test_data[,target_var])))
+  
 
   #progress bar
   withProgress(message = "Assessing all potential datacuts...", value = 0, {

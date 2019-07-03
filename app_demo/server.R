@@ -4,8 +4,8 @@ server <- function(input, output, session) {
   
 ####DATA INPUT AND EXPLORATION####
 
-  survey_data_reactive <-
-    reactive({
+  original_data_form <-
+    eventReactive(input$file1, {
 
       if(!is.null(input$file1)) {
         dataFile <- input$file1
@@ -18,11 +18,57 @@ server <- function(input, output, session) {
 
     })
 
+
+  
+  
+#ATTEMPTING TO ALLOW CLASS MODIFICATION OF DATAFRAME
+  output$sliders <- renderUI({
+    class_of_cols <- sapply((1:length(colnames(original_data_form()))),FUN = function(i) class(original_data_form()[,i]))
+    print(class_of_cols)
+    
+    class_of_cols <- sapply(class_of_cols,FUN = function(x) if(x %in% c("integer", "numeric")){"numeric"}
+                            else if(x %in% c("Date")) {"date"}
+      else{"categorical"}
+      )
+    print(class_of_cols)
+    lapply(1:length(colnames(original_data_form())), function(i) {
+      selectInput(inputId = paste0("col_", i), label = paste(colnames(original_data_form())[i]),choices = c("numeric","categorical","date"),multiple = FALSE,
+                  selected = class_of_cols[i]
+                  )
+    })
+    
+  })  
+  
+
+#REASSIGNING CLASS  
+ survey_data_reactive <- eventReactive(input$redefine, {
+   classes_updated <- sapply((1:length(colnames(original_data_form()))),FUN = function(i) input[[paste("col_",i,sep = "")]])
+   print(c("updated",classes_updated))
+   
+   dataFile <- input$file1
+   survey_data <- read.csv(dataFile$datapath,na.strings = c(""," ","NA"),header = TRUE, stringsAsFactors = FALSE, as.is = TRUE)
+   
+ 
+   for(i in 1:length(colnames(original_data_form()))){
+     if(classes_updated[i] == "numeric") {survey_data[,i] = as.integer(survey_data[,i])}
+     else if(classes_updated[i] == "date") {survey_data[,i] = as.Date(survey_data[,i], origin = "1899-12-30")}
+       else {survey_data[,i] = as.character(survey_data[,i])}
+   }
+   
+  final_classes <- sapply((1:length(colnames(original_data_form()))),FUN = function(i) class(survey_data[,i]))
+  print(c("final classes",final_classes))
+   
+   return(survey_data)
+   
+ })
+                                          
+   
+
   
 #OUTPUT THE RAW DATA TABLE AND SUMMARY ON NUMBER OF COLS/ROWS
 
   output$rawtable <- DT::renderDataTable({
-    DT::datatable(data = survey_data_reactive(),
+    DT::datatable(data = original_data_form(),
                   options = list(scrollX = T))
 
   })
@@ -258,7 +304,7 @@ updateSelectInput(session,"diff_range_vars",label = "Search For Trends Over...",
 diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
 
   #progress bar
-  # withProgress(message = "Assessing all potential datacuts...", value = 0, max = 100, {
+  withProgress(message = "Assessing all potential datacuts...", value = 0, max = 100, {
   
   #Upfront variable definition
   split = input$diff_split_var
@@ -270,34 +316,34 @@ diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
   numbof_categorical = sum(!class_of_search %in% c("integer","numeric"))
   search_categorical = names(class_of_search)[!(class_of_search %in% c("integer","numeric"))]
 
-  # setProgress(value = 1) 
+  setProgress(value = 1)
   
   
 #running numeric
   mlml_num = fulldata_numeric(numbof_numeric,survey_data_reactive(), split, search_numeric)
-  # setProgress(value = 5) 
+  setProgress(value = 5)
   
   numstep1 = num_splitframe(numbof_numeric,mlml_num, split, search)
-  # setProgress(value = 10) 
+  setProgress(value = 10)
   
   numstep2 = num_frame(numbof_numeric,mlml_num,numstep1,search)
-  # setProgress(value = 15) 
+  setProgress(value = 15)
   
   numstep3 = num_split_mean_frame(numbof_numeric,mlml_num,numstep1,search)
-  # setProgress(value = 20) 
+  setProgress(value = 20)
   
   numstep4 = num_overall_mean_frame(numbof_numeric,mlml_num, numstep1, search)
-  # setProgress(value = 25) 
+  setProgress(value = 25)
   
   numstep5 = num_category_split(numbof_numeric,mlml_num,split,search)
-  # setProgress(value = 30) 
+  setProgress(value = 30)
   
   numstep6 = num_question_list(numbof_numeric,mlml_num,split,search)
-  # setProgress(value = 35) 
+  setProgress(value = 35)
   
   numstep7 = numbey_frame(numbof_numeric,numstep5,numstep6,numstep2,numstep3,numstep4,split)
   
-  # setProgress(value = 40)
+  setProgress(value = 40)
 
 #running categorical
   mlml_cat = fulldata_categorical(numbof_categorical,survey_data_reactive(), split, search_categorical)
@@ -312,7 +358,7 @@ diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
   print(c(length(catstep2),length(catstep3),length(catstep4),length(catstep5),length(catstep6),length(catstep7)),na.print = "NA! sad")
   catstep8 = cattey_frame(numbof_categorical,catstep5,catstep6,catstep7,catstep2,catstep3,catstep4,split)
   
-  # setProgress(value = 60)
+  setProgress(value = 60)
   
   
   if((numbof_categorical>0) & (numbof_numeric>0)){
@@ -326,7 +372,7 @@ diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
   }
   
   
-  # setProgress(value = 80)
+  setProgress(value = 80)
   
  
 #filtering and completing the table
@@ -335,11 +381,11 @@ diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
   final = final[order(final$cat,final$var,final$pval),]
   colnames(final) = c("Split_Value", "Question","Response","Insight","P-Value","Subset_Mean","Overall_Mean")
 
-  # setProgress(value = 100)
+  setProgress(value = 100)
   
   return(final)
 
-  # })
+  })
 })#close Difference Finder
   
 output$DiffyTable <- DT::renderDataTable({

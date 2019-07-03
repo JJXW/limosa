@@ -28,7 +28,11 @@ body <- dashboardBody(
               ),
             fluidRow(
               tryCatch(DT::dataTableOutput("rawtable"),error = function(err){print("No data")})
-              )
+              ),
+            
+            uiOutput("sliders"),
+            actionButton("redefine","Redefine Variable Types")
+            
             ),
  
     tabItem("tree", 
@@ -67,7 +71,6 @@ body <- dashboardBody(
                     checkboxInput("cpchoice","Advanced Parameter: Check to apply Complexity Threshold",
                                   value = FALSE))
             )
-            
           ),
           fluidRow(
             column(2,actionButton("UseTheseVars_tree", "Choose These Variables & Run"))
