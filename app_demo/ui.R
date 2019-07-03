@@ -12,15 +12,18 @@ sidebar <- dashboardSidebar(
   )
 )
 
+
 body <- dashboardBody(
   tabItems(
     tabItem("dashboard",
             fluidRow(
-              fileInput("file1", "Upload Survey Data in CSV File",
+              column(3, fileInput("file1", "Upload Survey Data in CSV File",
                         multiple = FALSE,
                         accept = c("text/csv",
                                    "text/comma-separated-values,text/plain",
-                                   ".csv"))
+                                   ".csv")))
+             
+              
             ),
             fluidRow(
               valueBoxOutput("survey_rows"),
@@ -29,9 +32,11 @@ body <- dashboardBody(
             fluidRow(
               tryCatch(DT::dataTableOutput("rawtable"),error = function(err){print("No data")})
               ),
+            br(),
+            fluidRow(column(3, div(style="display:inline-block",actionButton("redefine","Use These Data (check classes below)",icon = icon("play-circle"), width = "250%", style="color: #fff; background-color: #000000; border-color: #2e6da4; font-size:150%")))),
+            br(),
+            uiOutput("sliders")
             
-            uiOutput("sliders"),
-            actionButton("redefine","Redefine Variable Types")
             
             ),
  
