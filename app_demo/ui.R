@@ -139,7 +139,10 @@ body <- dashboardBody(
              column(3, numericInput("pvalue_diffy",
                           "Advanced Parameter: Max pvalue to include",
                           value = 0.5,step = 0.01
-             ))
+             )),
+             column(3,
+                    checkboxInput("weighted_avg","Advanced Parameter: Weighted Distribution Across Search",
+                                  value = FALSE))
            ),
            
            fluidRow(
