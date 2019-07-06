@@ -1,17 +1,4 @@
 
-###???? Need to fix when there is only one column specified in the search cols (it's ok if there is only one cat or only one num)
-
-#These fields will be defined directly after the user inputs
-# class_of_alldata = sapply(colnames(mlml), FUN = function(x) class(mlml[,x]))
-# class_of_search = class_of_alldata[match(search,names(class_of_alldata))]
-# number_of_numeric = sum(class_of_search %in% c("integer","numeric"))
-# search_numeric = names(class_of_search)[class_of_search %in% c("integer","numeric")]
-# number_of_categorical = sum(!class_of_search %in% c("integer","numeric"))
-# search_categorical = names(class_of_search)[!(class_of_search %in% c("integer","numeric"))]
-
-
-
-
 ##SEPARATING THE DATASET##
 #output the numeric piece to work with
 fulldata_numeric = function(number_of_numeric,alldata, split_col, search_num_only){
@@ -342,7 +329,7 @@ answer_list = function(number_of_categorical,fulldata, list_of_splitframes,searc
 cattey_frame = function(number_of_categorical,cat,var,ans,pval,mean_cat,mean_overall,split_col){
   if(number_of_categorical == 0){return("")}
   else {
-  cattey_dataframe <- cbind.data.frame(cat,var,ans,pval,mean_cat,mean_overall) #ERROR HERE?? "ARGUMENTS IMPLY DIFFERING # OF ROWS" CHECK THIS
+  cattey_dataframe <- cbind.data.frame(cat,var,ans,pval,mean_cat,mean_overall)
   cattey_dataframe$dif = round(((mean_cat - mean_overall)/mean_overall)+1,3)
 
   

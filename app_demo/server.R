@@ -302,7 +302,7 @@ updateSelectInput(session,"diff_range_vars",label = "Search For Trends Over...",
   
 
 diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
-
+if(input$weighted_avg == FALSE){
   #progress bar
   withProgress(message = "Assessing all potential datacuts...", value = 0, max = 100, {
   
@@ -355,7 +355,6 @@ diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
   catstep6 = cat_variable_list(numbof_categorical,mlml_cat, catstep1, search)
   catstep7 = answer_list(numbof_categorical,mlml_cat, catstep1, search)
   
-  print(c(length(catstep2),length(catstep3),length(catstep4),length(catstep5),length(catstep6),length(catstep7)),na.print = "NA! sad")
   catstep8 = cattey_frame(numbof_categorical,catstep5,catstep6,catstep7,catstep2,catstep3,catstep4,split)
   
   setProgress(value = 60)
@@ -372,7 +371,52 @@ diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
   }
   
   
-  setProgress(value = 80)
+  setProgress(value = 90)
+  }) #end progress bar for first statement
+  
+  
+  ###IF WEIGHTED AVERAGE DISTRIBUTION
+  } else {
+    withProgress(message = "Assessing all potential datacuts...", value = 0, max = 100, {
+      
+      #Upfront variable definition
+      split = input$diff_split_var
+      search = input$diff_range_vars
+     
+      #Adding total rows for distribution
+      splitframes = num_splitframe_percent(survey_data_reactive(), split, search)
+      splitframes = add_totalcol(splitframes,search)
+      overall_data = add_totalcol_fulldata(survey_data_reactive(),search)
+      setProgress(value = 10)
+      
+      #Converting into percents
+      splitframes = percent_transform(splitframes,search)
+      overall_data = percent_transform_fulldata(overall_data,search)
+      setProgress(value = 20)
+      
+      
+      perc_pvals = p_value_creation(overall_data,splitframes,search)
+      setProgress(value = 40)
+      
+      
+      perc_groupmeans = group_means_percent(splitframes,search)
+      perc_overallmeans = overall_means_percent(overall_data,splitframes,search)
+      
+      setProgress(value = 60)
+      
+      category_labels = num_category_split_percent(overall_data,splitframes,split,search)
+      question_labels = num_question_list_percent(overall_data,splitframes,split,search)
+    
+      setProgress(value = 90)
+      
+      
+      final = percey_frame(category_labels,question_labels,perc_pvals,perc_groupmeans,perc_overallmeans,split)
+      
+    })#end progress bar for weighted average piece
+}
+  
+  
+  
   
  
 #filtering and completing the table
@@ -381,11 +425,10 @@ diffs_tree <- eventReactive(input$UseTheseVars_diffy, {
   final = final[order(final$cat,final$var,final$pval),]
   colnames(final) = c("Split_Value", "Question","Response","Insight","P-Value","Subset_Mean","Overall_Mean")
 
-  setProgress(value = 100)
   
   return(final)
 
-  })
+  
 })#close Difference Finder
   
 output$DiffyTable <- DT::renderDataTable({
