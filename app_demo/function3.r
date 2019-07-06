@@ -143,6 +143,8 @@ percey_frame = function(cat,var,pval,mean_cat,mean_overall,split_col){
    
     percey_dataframe <- cbind.data.frame(cat,var,ans,pval,mean_cat,mean_overall)
     percey_dataframe$dif = round((mean_cat - mean_overall)/mean_overall,3)+1
+    percey_dataframe[,'mean_cat'] = percent(percey_dataframe[,'mean_cat'])
+    percey_dataframe[,'mean_overall'] = percent(percey_dataframe[,'mean_overall'])  
     
     percey_dataframe$rule = mapply(function(category, variable, difference,split_column) {
       paste("When ",split_column," is ",category,", ",variable," differs by ", difference,"X vs the overall average",sep = "")

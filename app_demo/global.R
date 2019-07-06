@@ -22,6 +22,8 @@ library(knitr)
 library(kableExtra)
 library(tinytex)
 library(webshot)
+library(scales)
+library(weights)
 
 
 source('function.R')
