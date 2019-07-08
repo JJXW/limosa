@@ -7,6 +7,7 @@ sidebar <- dashboardSidebar(
     menuItem("Data Upload & Summary", tabName = "dashboard"),
     menuItem("Prediction Finder", tabName = "tree"),
     menuItem("Difference Finder", tabName = "diffy"),
+    menuItem("Cohort Analysis", tabName = 'cohort'),
     menuItem("Info & Contact", tabName = "help")
     
   )
@@ -155,7 +156,44 @@ body <- dashboardBody(
          fluidRow(
            downloadButton("report_diffy", "Download Table")
          )
- )
+ ),
+ tabItem("cohort",
+         fluidRow(titlePanel("Cohort Analysis")),
+         br(),
+         mainPanel("This tool allows you to complete cohort analyses on transaction level data"),
+         br(),
+         br(),
+         wellPanel(fluidRow(
+           column(3,
+                  selectInput("cohort_id",
+                              "Select the id var to identify individuals",
+                              c('',""),
+                              multiple = F)),
+           column(3,
+                  selectInput("cohort_time",
+                              "Select the time var to track the cohort across",
+                              c('',""),
+                              multiple = F)),
+           column(3,
+                  selectInput("cohort_time_group",
+                              "Select the time granularity to track the cohort across",
+                              c('day', 'month'),
+                              multiple = F)),
+           column(3,
+                  selectInput("cohort_group",
+                              "Group the cohorts using (e.g. by gender)...",
+                              c('',""),
+                              multiple = F)),
+           column(3,
+                  selectInput("cohort_target",
+                              "Select the target variable to analyze the cohorts on",
+                              c('',""),
+                              multiple = F))
+         )),
+         fluidRow(
+           column(2,actionButton("UseTheseVars_cohort", "Choose These Variables & Run"))
+         )
+         )
 )
 )
 

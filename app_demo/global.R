@@ -24,7 +24,9 @@ library(tinytex)
 library(webshot)
 library(scales)
 library(weights)
+library(lubridate)
 
+options(stringsAsFactors = F)
 
 source('function.R')
 source('function2.R')

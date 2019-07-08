@@ -298,6 +298,11 @@ observe({values <- colnames(survey_data_reactive())
 #automatic segmentation
 updateSelectInput(session,"diff_split_var",label = "Cut The Data By...",choices = c('',values))
 updateSelectInput(session,"diff_range_vars",label = "Search For Trends Over...",choices = c('',values))
+
+updateSelectInput(session, "cohort_time", choices=c('',values))
+updateSelectInput(session, "cohort_group", choices=c('',values))
+updateSelectInput(session, "cohort_target", choices=c('',values))
+updateSelectInput(session, "cohort_id", choices=c('',values))
 })
   
 
@@ -452,5 +457,57 @@ output$report_diffy = downloadHandler(
     write.csv(diffytree(), file)
   }
 )
+
+cohort_data <- eventReactive(input$UseTheseVars_cohort, {
+  
+  data <- survey_data_reactive()
+  
+  data_subset <- data[, c(input$cohort_id, input$cohort_time, input$cohort_group, input$cohort_target)]
+  
+  data_subset_names <- names(data_subset)
+  
+  names(data_subset) <- c('cohort_id', 'time_var', 'cohort_group', 'cohort_target')
+  
+  if(input$cohort_time_group == 'day'){
+    data_subset <- data_subset %>% 
+      mutate(cohort_time_group = as.Date(time_var, format = '%m/%d/%y'))
+    group_min <- data_subset %>%
+      dplyr::group_by(cohort_id) %>%
+      dplyr::summarize(group_time_min = min(cohort_time_group))
+    
+    data_subset <- data_subset %>%
+      dplyr::left_join(group_min)
+    
+    data_subset <- data_subset %>% 
+      mutate(date_diff = as.numeric(cohort_time_group - group_time_min))
+      
+  } else if(input$cohort_time_group == 'month'){
+    data_subset <- data_subset %>% 
+      mutate(cohort_time_group = floor_date(as.Date(time_var, format = '%m/%d/%y'), unit = 'months'))
+    
+    group_min <- data_subset %>%
+      dplyr::group_by(cohort_id) %>%
+      dplyr::summarize(group_time_min = min(cohort_time_group))
+    
+    data_subset <- data_subset %>%
+      dplyr::left_join(group_min)
+    
+    data_subset <- data_subset %>%
+      mutate(date_diff = interval(ymd(group_time_min),ymd(cohort_time_group)) %/% months(1))
+  }
+  
+  date_matrix <- data.frame(dates = seq(from=min(data_subset$date_diff), 
+                                        to=max(data_subset$date_diff)),
+                            dummy = T)
+    
+  cohort_matrix <- data_subset %>%
+    mutate(dummy = T) %>%
+    dplyr::left_join(date_matrix) %>%
+    dplyr::filter(date_diff <= dates) %>% 
+    dplyr::group_by(cohort_time_group, dates, date_diff) %>%
+    dplyr::summarize(cohort_target = sum(cohort_target, na.rm=T))
+    
+
+})
 
 }#close server block
