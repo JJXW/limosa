@@ -331,7 +331,8 @@ cattey_frame = function(number_of_categorical,cat,var,ans,pval,mean_cat,mean_ove
   else {
   cattey_dataframe <- cbind.data.frame(cat,var,ans,pval,mean_cat,mean_overall)
   cattey_dataframe$dif = round(((mean_cat - mean_overall)/mean_overall)+1,3)
-
+  cattey_dataframe[,'mean_cat'] = percent(cattey_dataframe[,'mean_cat'])
+  cattey_dataframe[,'mean_overall'] = percent(cattey_dataframe[,'mean_overall'])
   
   cattey_dataframe$rule = mapply(function(category, variable, answer, difference,split_column) {
     paste("When ",split_column," is ",category,", ",variable," is ",answer, " with ", difference,"X the frequency vs the overall average",sep = "")
