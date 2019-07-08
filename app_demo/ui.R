@@ -192,7 +192,9 @@ body <- dashboardBody(
          )),
          fluidRow(
            column(2,actionButton("UseTheseVars_cohort", "Choose These Variables & Run"))
-         )
+         ),
+         br(),
+         fluidRow(plotlyOutput("cohort_plot"))
          )
 )
 )

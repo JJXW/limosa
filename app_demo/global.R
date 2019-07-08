@@ -25,6 +25,7 @@ library(webshot)
 library(scales)
 library(weights)
 library(lubridate)
+library(RColorBrewer)
 
 options(stringsAsFactors = F)
 

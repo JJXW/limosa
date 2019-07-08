@@ -496,18 +496,29 @@ cohort_data <- eventReactive(input$UseTheseVars_cohort, {
       mutate(date_diff = interval(ymd(group_time_min),ymd(cohort_time_group)) %/% months(1))
   }
   
-  date_matrix <- data.frame(dates = seq(from=min(data_subset$date_diff), 
-                                        to=max(data_subset$date_diff)),
-                            dummy = T)
-    
-  cohort_matrix <- data_subset %>%
-    mutate(dummy = T) %>%
-    dplyr::left_join(date_matrix) %>%
-    dplyr::filter(date_diff <= dates) %>% 
-    dplyr::group_by(cohort_time_group, dates, date_diff) %>%
-    dplyr::summarize(cohort_target = sum(cohort_target, na.rm=T))
-    
+  cohort_data <- data_subset %>%
+    dplyr::group_by(date_diff, cohort_time_group) %>%
+    dplyr::summarise(cohort_target = sum(as.numeric(cohort_target), na.rm=T))
 
+  return(cohort_data)
+  
+  })
+
+output$cohort_plot <- renderPlotly({
+  
+  data <- cohort_data()
+  
+  p <- ggplot(data, 
+              aes(x=date_diff, y=cohort_target, fill=cohort_time_group)) + 
+    geom_line() + 
+    scale_fill_brewer(palette = "Paired") + ## TODO: colors are broken when there's 9+ groups
+    theme_minimal(base_size = 16) 
+    
+  
+  p <- ggplotly(p) %>% layout(autosize = T)
+  
+  
 })
+
 
 }#close server block
