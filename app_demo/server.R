@@ -43,8 +43,7 @@ server <- function(input, output, session) {
 #REASSIGNING CLASS  
  survey_data_reactive <- eventReactive(input$redefine, {
    classes_updated <- sapply((1:length(colnames(original_data_form()))),FUN = function(i) input[[paste("col_",i,sep = "")]])
-   print(c("updated",classes_updated))
-   
+
    dataFile <- input$file1
    survey_data <- read.csv(dataFile$datapath,na.strings = c(""," ","NA"),header = TRUE, stringsAsFactors = FALSE, as.is = TRUE)
 
@@ -56,8 +55,7 @@ server <- function(input, output, session) {
    }
    
   final_classes <- sapply((1:length(colnames(original_data_form()))),FUN = function(i) class(survey_data[,i]))
-  print(c("final classes",final_classes))
-   
+
    return(survey_data)
    
  })
@@ -107,7 +105,7 @@ server <- function(input, output, session) {
   #MAKING SURE VARIABLES UPDATE ACROSS SELECTION VARIABLES#
   #automatic segmentation
   updateSelectInput(session,"tree_target_var",label = "I Want To Predict...",choices = c('',values))
-  updateSelectInput(session,"tree_split_var",label = "I Want To Search Over...",choices = c('',values))
+  updateSelectInput(session,"tree_split_var",label = "Search For Trends Over...",choices = c('',values))
   })
 
 
@@ -296,7 +294,7 @@ observe({values <- colnames(survey_data_reactive())
 
 #MAKING SURE VARIABLES UPDATE ACROSS SELECTION VARIABLES#
 #automatic segmentation
-updateSelectInput(session,"diff_split_var",label = "Cut The Data By...",choices = c('',values))
+updateSelectInput(session,"diff_split_var",label = "Split The Data By...",choices = c('',values))
 updateSelectInput(session,"diff_range_vars",label = "Search For Trends Over...",choices = c('',values))
 
 updateSelectInput(session, "cohort_time", choices=c('',values))
@@ -507,9 +505,9 @@ cohort_data <- eventReactive(input$UseTheseVars_cohort, {
 output$cohort_plot <- renderPlotly({
   
   data <- cohort_data()
-  
+
   p <- ggplot(data, 
-              aes(x=date_diff, y=cohort_target, fill=cohort_time_group)) + 
+              aes(x=date_diff, y=cohort_target, group=cohort_time_group)) + 
     geom_line() + 
     scale_fill_brewer(palette = "Paired") + ## TODO: colors are broken when there's 9+ groups
     theme_minimal(base_size = 16) 

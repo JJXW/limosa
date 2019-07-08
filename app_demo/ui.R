@@ -42,8 +42,9 @@ body <- dashboardBody(
             ),
  
     tabItem("tree", 
-            fluidRow(titlePanel("Prediction Finder"),
-                     mainPanel("This tool allows you to find the best models of datacuts that predict a given target variable.")),
+            fluidRow(h1(strong("Prediction Finder")),
+                      h3(em("What subsets in my data predict differences in X?"))),
+                     hr(),
             wellPanel(fluidRow(
               column(3,
                      selectInput("tree_target_var",
@@ -55,7 +56,7 @@ body <- dashboardBody(
               
               column(3,
                      selectInput("tree_split_var",
-                                 "Search Over...",
+                                 "Search For Trends Over...",
                                  c('',""),
                                  selected = NULL,
                                  multiple = T)
@@ -116,15 +117,14 @@ body <- dashboardBody(
          "Phone Number: 714-745-0455"
          ),
  tabItem("diffy",
-         fluidRow(titlePanel("Difference Finder")),
-          br(),
-         mainPanel("This tool uses allows you to search a whole range of data to find which show significant trends when split by a categorical variable of your choice"),
-         br(),
+         fluidRow(h1(strong("Difference Finder"),
+                  h3(em("When split by X, what are the main insights in my data?")))),
+         
          br(),
          wellPanel(fluidRow(
            column(3,
                   selectInput("diff_split_var",
-                              "Cut The Data By...",
+                              "Split The Data By...",
                               c('',""),
                               multiple = F)
            ),
