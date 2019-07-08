@@ -421,9 +421,9 @@ if(input$weighted_avg == FALSE){
  
 #filtering and completing the table
   final = filter(final,pval<=input$pvalue_diffy)
-  final = final[,c('cat','var','ans','rule','pval','mean_cat','mean_overall')]
+  final = final[,c('cat','var','ans','rule','pval','mean_cat','mean_overall','dif')]
   final = final[order(final$cat,final$var,final$pval),]
-  colnames(final) = c("Split_Value", "Question","Response","Insight","P-Value","Subset_Mean","Overall_Mean")
+  colnames(final) = c("Split_Value", "Question","Response","Insight","P-Value","Subset_Mean","Overall_Mean","Difference")
 
   
   return(final)
