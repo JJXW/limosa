@@ -190,7 +190,7 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
           
           #difference from avg
           #JON TO ASSESS AND CHANGE AS NEEDED
-          masterframe[j:(j+numleafs-1),(10)] = round(masterframe[j:(j+numleafs-1),3] - masterframe[j:(j+numleafs-1),(9)],2)
+          masterframe[j:(j+numleafs-1),(10)] = round(masterframe[j:(j+numleafs-1),3] / masterframe[j:(j+numleafs-1),(9)],2)
           
           #chi square p value
           party_model = as.party(model)
@@ -409,7 +409,7 @@ masterframe_nodecuts = function(original_data, vars, target_var, min_leaf, cpinp
           
           #difference from avg
           #JON TO ASSESS AND CHANGE AS NEEDED
-          masterframe[j:(j+numleafs-1),(10)] = round(masterframe[j:(j+numleafs-1),3] - masterframe[j:(j+numleafs-1),(9)],2)
+          masterframe[j:(j+numleafs-1),(10)] = round(masterframe[j:(j+numleafs-1),3] / masterframe[j:(j+numleafs-1),(9)],3)
           
           #OUTPUTTING THE FULL NODE FRAME FOR EACH NODE IN A LIST
           party_model = as.party(model)

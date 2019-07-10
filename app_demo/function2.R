@@ -43,7 +43,7 @@ fulldata_categorical = function(number_of_categorical,alldata, split_col, search
 # mlml_cat
 
 #####NUMERICAL PART#####
-#return list of split dataframes by a given column
+#NUMSTEP 1: return list of split dataframes by a given column
 num_splitframe = function(number_of_numeric,fulldata, split_col, search_cols){
   if(number_of_numeric == 0){return("")}
   else {
@@ -55,11 +55,9 @@ num_splitframe = function(number_of_numeric,fulldata, split_col, search_cols){
   }
 }
 
-# #TEST
-# numstep1 = num_splitframe(mlml_num, split, search)
-# numstep1
 
-#take individual dataframe and return what we need for the pvalue insights, returning unlisted version
+
+#NUMSTEP 2: take individual dataframe and return what we need for the pvalue insights, returning unlisted version
 num_frame = function(number_of_numeric,fulldata, list_of_splitframes,search_cols){
   if(number_of_numeric == 0){return("")}
   else {
@@ -78,11 +76,8 @@ return(as.numeric(round(unlist(given_pvals),3)))
   }
 }
 
-# #TEST
-# numstep2 = num_frame(mlml_num,numstep1,search)
-# numstep2
 
-#returning the means of each question by the split variable, returning unlisted version
+#NUMSTEP 3: returning the means of each question by the split variable, returning unlisted version
 num_split_mean_frame = function(number_of_numeric,fulldata, list_of_splitframes,search_cols){
   if(number_of_numeric == 0){return("")}
   else {
@@ -100,10 +95,8 @@ num_split_mean_frame = function(number_of_numeric,fulldata, list_of_splitframes,
   }
 }
 
-#TEST
-# numstep3 = num_split_mean_frame(mlml_num,numstep1,search)
 
-#returning the means of the overall population by the split variable, returning unlisted version
+#NUMSTEP 4: returning the means of the overall population by the split variable, returning unlisted version
 num_overall_mean_frame = function(number_of_numeric,fulldata, list_of_splitframes,search_cols){
   if(number_of_numeric == 0){return("")}
   else {
@@ -120,10 +113,9 @@ num_overall_mean_frame = function(number_of_numeric,fulldata, list_of_splitframe
   }
 }
 
-# #TEST
-# numstep4 = num_overall_mean_frame(mlml_num, numstep1, search)
 
-#creating the category split
+
+#NUMSTEP 5: creating the category split
 num_category_split = function(number_of_numeric,fulldata, split_col, search_cols){
   if(number_of_numeric == 0){return("")}
   else {
@@ -133,10 +125,8 @@ num_category_split = function(number_of_numeric,fulldata, split_col, search_cols
   }
 }
 
-#TEST
-# numstep5 = num_category_split(mlml_num,split,search)
 
-#creating the variable list of questions
+#NUMSTEP 6: creating the variable list of questions
 num_question_list = function(number_of_numeric,fulldata, split_col, search_cols){
   if(number_of_numeric == 0){return("")}
   else {
@@ -146,15 +136,30 @@ num_question_list = function(number_of_numeric,fulldata, split_col, search_cols)
   }
 }
 
-#TEST
-# numstep6 = num_question_list(mlml_num,split,search)
+#NUMSTEP 6A: creating the n for each category
+N_in_category = function(number_of_numeric,fulldata, list_of_splitframes,search_cols){
+  if(number_of_numeric == 0){return("")}
+  else {
+    num_search_cols = search_cols[search_cols %in% colnames(fulldata)]
+    n_of_category = lapply(list_of_splitframes,
+                           FUN = function(frame_from_list) sapply(num_search_cols, 
+                                                                  FUN = function(search_col) 
+                                                                    if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>2){
+                                                                      nrow(frame_from_list)}
+                                                                  else{0}
+                           ))
+    
+    return(as.numeric(unlist(n_of_category)))
+  }
+}
 
-#creating the numeric dataframe and then adding rules
-numbey_frame = function(number_of_numeric,cat,var,pval,mean_cat,mean_overall,split_col){
+
+#NUMSTEP7: creating the numeric dataframe and then adding rules
+numbey_frame = function(n_category,number_of_numeric,cat,var,pval,mean_cat,mean_overall,split_col){
   if(number_of_numeric == 0){return("")}
   else {
   ans = rep("",length(cat))
-  numbey_dataframe <- cbind.data.frame(cat,var,ans,pval,mean_cat,mean_overall)
+  numbey_dataframe <- cbind.data.frame(n_category,cat,var,ans,pval,mean_cat,mean_overall)
   numbey_dataframe$dif = round((mean_cat - mean_overall)/mean_overall,3)+1
   
   numbey_dataframe$rule = mapply(function(category, variable, difference,split_column) {
@@ -172,7 +177,7 @@ numbey_frame = function(number_of_numeric,cat,var,pval,mean_cat,mean_overall,spl
 
 #####CATEGORICAL PART#####
 
-#return list of split dataframes by a given column
+#CATSTEP1: return list of split dataframes by a given column
 cat_splitframe = function(number_of_categorical,fulldata, split_col){
   if(number_of_categorical == 0){return("")}
   else {
@@ -182,11 +187,9 @@ cat_splitframe = function(number_of_categorical,fulldata, split_col){
   }
 }
 
-#TEST
 
-# catstep1 = cat_splitframe(mlml_cat, split)
 
-#take individual dataframe and return what we need for the pvalue insights, returning unlisted version
+#CATSTEP2: take individual dataframe and return what we need for the pvalue insights, returning unlisted version
 cat_frame = function(number_of_categorical,fulldata, list_of_splitframes,search_cols){
   if(number_of_categorical == 0){return("")}
   else {
@@ -207,10 +210,8 @@ cat_frame = function(number_of_categorical,fulldata, list_of_splitframes,search_
     }
   }
 
-#TEST
-# catstep2 = cat_frame(mlml_cat,catstep1,search)
 
-#return the mean proportion of each question and answer combination in the split frames
+#CATSTEP 3: return the mean proportion of each question and answer combination in the split frames
 cat_split_mean_frame = function(number_of_categorical,fulldata, list_of_splitframes,search_cols){
   if(number_of_categorical == 0){return("")}
   else {
@@ -229,11 +230,8 @@ cat_split_mean_frame = function(number_of_categorical,fulldata, list_of_splitfra
   }
 }
 
-#TEST
-# catstep3 = cat_split_mean_frame(mlml_cat,catstep1,search)
 
-
-#return the mean proportion of each question and answer combination in the overall population
+#CATSTEP 4: return the mean proportion of each question and answer combination in the overall population
 cat_overall_mean_frame = function(number_of_categorical,fulldata, list_of_splitframes,search_cols){
   if(number_of_categorical == 0){return("")}
   else {
@@ -253,11 +251,9 @@ cat_overall_mean_frame = function(number_of_categorical,fulldata, list_of_splitf
   }
 }
 
-#TEST
-# catstep4 = cat_overall_mean_frame(mlml_cat,catstep1,search)
 
 
-#creating the category split list
+#CATSTEP 5: creating the category split list
 cat_category_split = function(number_of_categorical, fulldata,list_of_splitframes,search_cols){
   if(number_of_categorical == 0){return("")}
   else {
@@ -269,17 +265,13 @@ cat_category_split = function(number_of_categorical, fulldata,list_of_splitframe
                                                                                                           as.character(unlist(unique(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,1])))
                                                                                                         }
                                                                                                         )))
-  # [unique(frame_from_list[,search_col])!=""]
-  
   return(unlist(catsplits))
   }
 }
 
 
-#TEST
-# catstep5 = cat_category_split(mlml_cat,catstep1,search)
 
-#creating the variable list
+#CATSTEP 6: creating the variable list
 cat_variable_list = function(number_of_categorical,fulldata, list_of_splitframes,search_cols){
   if(number_of_categorical == 0){return("")}
   else {
@@ -298,11 +290,8 @@ cat_variable_list = function(number_of_categorical,fulldata, list_of_splitframes
   }
 }
 
-#TEST
-# catstep6 = cat_variable_list(mlml_cat, catstep1, search)
 
-
-#creating the list of answer choices
+#CATSTEP 7: creating the list of answer choices
 answer_list = function(number_of_categorical,fulldata, list_of_splitframes,search_cols){
   if(number_of_categorical == 0){return("")}
   else {
@@ -321,15 +310,31 @@ answer_list = function(number_of_categorical,fulldata, list_of_splitframes,searc
   }
 }
 
-# catstep7 = answer_list(mlml_cat, catstep1, search)
-# catstep7
-
-
-#creating the numeric dataframe and then adding rules
-cattey_frame = function(number_of_categorical,cat,var,ans,pval,mean_cat,mean_overall,split_col){
+#CATSTEP 7A: outputting the N for each question/answer combination
+n_list_categorical = function(number_of_categorical,fulldata, list_of_splitframes,search_cols){
   if(number_of_categorical == 0){return("")}
   else {
-  cattey_dataframe <- cbind.data.frame(cat,var,ans,pval,mean_cat,mean_overall)
+    cat_search_cols = search_cols[search_cols %in% colnames(fulldata)]
+    n_of_each = lapply(list_of_splitframes,
+                         FUN = function(frame_from_list) sapply(cat_search_cols, 
+                                                                FUN = function(search_col) sapply(unique(frame_from_list[,search_col]),
+                                                                                                  FUN = function(question_val) if(sum(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]==question_val)>4){
+                                                                                                    sum(frame_from_list[,search_col]==question_val)
+                                                                                                  }
+                                                                )))
+    
+    
+    
+    return(unlist(n_of_each))
+  }
+}
+
+
+#CATSTEP 8: creating the numeric dataframe and then adding rules
+cattey_frame = function(n_category,number_of_categorical,cat,var,ans,pval,mean_cat,mean_overall,split_col){
+  if(number_of_categorical == 0){return("")}
+  else {
+  cattey_dataframe <- cbind.data.frame(n_category,cat,var,ans,pval,mean_cat,mean_overall)
   cattey_dataframe$dif = round(((mean_cat - mean_overall)/mean_overall)+1,3)
   cattey_dataframe[,'mean_cat'] = percent(cattey_dataframe[,'mean_cat'])
   cattey_dataframe[,'mean_overall'] = percent(cattey_dataframe[,'mean_overall'])
@@ -342,8 +347,4 @@ cattey_frame = function(number_of_categorical,cat,var,ans,pval,mean_cat,mean_ove
   }
 }
 
-# catstep8 = cattey_frame(catstep5,catstep6,catstep7,catstep2,catstep3,catstep4,split)
 
-
-# final = rbind(catstep8,numstep7)
-# final

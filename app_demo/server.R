@@ -121,6 +121,7 @@ server <- function(input, output, session) {
     return(masterframeFX(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$min_leaf, input$cpchoice, unique_outcomes(), input$pvalue_thresh))
 
   })
+  
 
   #outputting the dataset for each relevant node in the same order as the masterframe rows
   numeric_nodeframe <- eventReactive(input$UseTheseVars_tree, {
@@ -133,6 +134,7 @@ server <- function(input, output, session) {
 
     #creating the output table
     out_table = tree_model()
+    print(out_table)
     out_table$model = 1:nrow(out_table)
     
     #allowing the right column name for numeric average (it was outputting oddly)
@@ -140,7 +142,7 @@ server <- function(input, output, session) {
       out_table = cbind(out_table[,c('model','n','rule','pvalue')],out_table[,str_detect(colnames(out_table),"avg_")])
       
     } else{
-      out_table = cbind(out_table[,c('model','n','rule','pvalue')],Overall_Average = out_table[,str_detect(colnames(out_table),"avg_")])
+      out_table = cbind(out_table[,c('model','n','rule','pvalue')],Subset_Mean = out_table[,'yval'],Overall_Mean = out_table[,str_detect(colnames(out_table),"avg_")],Difference = out_table[,'Dif_Score'])
       
     }
     if(nrow(out_table)==1){
@@ -344,7 +346,9 @@ if(input$weighted_avg == FALSE){
   numstep6 = num_question_list(numbof_numeric,mlml_num,split,search)
   setProgress(value = 35)
   
-  numstep7 = numbey_frame(numbof_numeric,numstep5,numstep6,numstep2,numstep3,numstep4,split)
+  numstep6a = N_in_category(numbof_numeric,mlml_num,numstep1,search)
+  
+  numstep7 = numbey_frame(numstep6a, numbof_numeric,numstep5,numstep6,numstep2,numstep3,numstep4,split)
   
   setProgress(value = 40)
 
@@ -357,12 +361,13 @@ if(input$weighted_avg == FALSE){
   catstep5 = cat_category_split(numbof_categorical,mlml_cat,catstep1,search_categorical)
   catstep6 = cat_variable_list(numbof_categorical,mlml_cat, catstep1, search)
   catstep7 = answer_list(numbof_categorical,mlml_cat, catstep1, search)
+  catstep7a = n_list_categorical(numbof_categorical,mlml_cat, catstep1, search)
   
-  catstep8 = cattey_frame(numbof_categorical,catstep5,catstep6,catstep7,catstep2,catstep3,catstep4,split)
+  catstep8 = cattey_frame(catstep7a,numbof_categorical,catstep5,catstep6,catstep7,catstep2,catstep3,catstep4,split)
   
   setProgress(value = 60)
   
-  
+  #NEED TO ADD N FOR CATEGORICAL STILL
   if((numbof_categorical>0) & (numbof_numeric>0)){
     final = rbind(catstep8,numstep7) #both numerical and categorical
   }
@@ -391,27 +396,32 @@ if(input$weighted_avg == FALSE){
       splitframes = add_totalcol(splitframes,search)
       overall_data = add_totalcol_fulldata(survey_data_reactive(),search)
       setProgress(value = 10)
+      print("1")
       
       #Converting into percents
       splitframes = percent_transform(splitframes,search)
       overall_data = percent_transform_fulldata(overall_data,search)
-      setProgress(value = 20)
-      
+      setProgress(value = 25)
+      print("2")
       
       perc_pvals = p_value_creation(overall_data,splitframes,search)
-      setProgress(value = 40)
+      Sys.sleep(1)
+      setProgress(value = 50)
       
+      print("3")
       
       perc_groupmeans = group_means_percent(splitframes,search)
       perc_overallmeans = overall_means_percent(overall_data,splitframes,search)
+      Sys.sleep(1)
+      setProgress(value = 80)
       
-      setProgress(value = 60)
+      print("4")
       
       category_labels = num_category_split_percent(overall_data,splitframes,split,search)
-      question_labels = num_question_list_percent(overall_data,splitframes,split,search)
-    
       setProgress(value = 90)
-      
+      question_labels = num_question_list_percent(overall_data,splitframes,split,search)
+      print("5")
+
       
       final = percey_frame(category_labels,question_labels,perc_pvals,perc_groupmeans,perc_overallmeans,split)
       
@@ -424,9 +434,10 @@ if(input$weighted_avg == FALSE){
  
 #filtering and completing the table
   final = filter(final,pval<=input$pvalue_diffy)
-  final = final[,c('cat','var','ans','rule','pval','mean_cat','mean_overall','dif')]
+  print(final)
+  final = final[,c('n_category','cat','var','ans','rule','pval','mean_cat','mean_overall','dif')]
   final = final[order(final$cat,final$var,final$pval),]
-  colnames(final) = c("Split_Value", "Question","Response","Insight","P-Value","Subset_Mean","Overall_Mean","Difference")
+  colnames(final) = c("N","Split_Value", "Question","Response","Insight","P-Value","Subset_Mean","Overall_Mean","Difference")
 
   
   return(final)
@@ -435,7 +446,7 @@ if(input$weighted_avg == FALSE){
 })#close Difference Finder
   
 output$DiffyTable <- DT::renderDataTable({
-  DT::datatable(data = diffs_tree(),
+  DT::datatable(data = diffs_tree(),rownames = FALSE,
                 options = list(scrollX = T))
   
 })

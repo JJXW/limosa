@@ -7,7 +7,7 @@ sidebar <- dashboardSidebar(
     menuItem("Data Upload & Summary", tabName = "dashboard"),
     menuItem("Prediction Finder", tabName = "tree"),
     menuItem("Difference Finder", tabName = "diffy"),
-    menuItem("Cohort Analysis", tabName = 'cohort'),
+    # menuItem("Cohort Analysis", tabName = 'cohort'),
     menuItem("Info & Contact", tabName = "help")
     
   )
@@ -18,7 +18,7 @@ body <- dashboardBody(
   tabItems(
     tabItem("dashboard",
             fluidRow(
-              column(3, fileInput("file1", "Upload Survey Data in CSV File",
+              column(3, fileInput("file1", "Upload Data in CSV File",
                         multiple = FALSE,
                         accept = c("text/csv",
                                    "text/comma-separated-values,text/plain",
@@ -43,7 +43,7 @@ body <- dashboardBody(
  
     tabItem("tree", 
             fluidRow(h1(strong("Prediction Finder")),
-                      h3(em("What subsets in my data predict differences in X?"))),
+                      h3(em("What subsets in my data most predict differences in X?"))),
                      hr(),
             wellPanel(fluidRow(
               column(3,
