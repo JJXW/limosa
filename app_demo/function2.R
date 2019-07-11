@@ -66,7 +66,7 @@ num_frame = function(number_of_numeric,fulldata, list_of_splitframes,search_cols
                   FUN = function(frame_from_list) sapply(num_search_cols, 
                      FUN = function(search_col) 
                        if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>2){
-                         t.test(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col],filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col])$p.value
+                         t.test(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col],filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col],na.omit = TRUE)$p.value
                        } else{1}
                           ))
 
@@ -87,8 +87,8 @@ num_split_mean_frame = function(number_of_numeric,fulldata, list_of_splitframes,
                        FUN = function(frame_from_list) sapply(num_search_cols, 
                                                               FUN = function(search_col) 
                                                                 if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>2){
-                                                                round(mean(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col]),3)}
-                                                              else{0}
+                                                                round(mean(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col],na.rm = TRUE),3)}
+                                                              else{round(mean(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col],na.rm = TRUE),3)}
                                                                 ))
   
   return(as.numeric(unlist(cat_means)))
@@ -105,8 +105,8 @@ num_overall_mean_frame = function(number_of_numeric,fulldata, list_of_splitframe
                      FUN = function(frame_from_list) sapply(num_search_cols, 
                                                             FUN = function(search_col) 
                                                               if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>2){
-                                                              round(mean(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col]),3)}
-                                                                else{0}
+                                                              round(mean(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col],na.rm = TRUE),3)}
+                                                                else{round(mean(filter(fulldata,!is.na(!!as.symbol(search_col)))[,search_col],na.rm = TRUE),3)}
                                                                 ))
   
   return(as.numeric(unlist(overall_means)))
@@ -146,7 +146,7 @@ N_in_category = function(number_of_numeric,fulldata, list_of_splitframes,search_
                                                                   FUN = function(search_col) 
                                                                     if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>2){
                                                                       nrow(frame_from_list)}
-                                                                  else{0}
+                                                                  else{nrow(frame_from_list)}
                            ))
     
     return(as.numeric(unlist(n_of_category)))

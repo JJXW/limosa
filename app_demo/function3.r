@@ -113,8 +113,7 @@ num_category_split_percent = function(fulldata_percent, list_of_splitframes_perc
                          ))
   
   
-    # num_search_cols = search_cols[search_cols %in% colnames(fulldata_percent)]
-    # cat_list = rep(unique(fulldata_percent[,split_col]),rep(length(num_search_cols),length(unique(fulldata_percent[,split_col]))))
+
     return(unlist(cat_list))
   
 }
@@ -130,18 +129,30 @@ num_question_list_percent = function(fulldata_percent, list_of_splitframes_perce
                                                                   if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>2){
                                                                     search_col}
                          ))
-  
-  # num_search_cols = search_cols[search_cols %in% colnames(fulldata_percent)]
-    # quest_list = rep(num_search_cols,length(unique(fulldata_percent[,split_col])))
+
     return(unlist(quest_list))
 }
 
 
+#outputting N per group
+n_list_weighted = function(fulldata_percent, list_of_splitframes_percent, split_col, search_cols){
+  
+  n_list = lapply(list_of_splitframes_percent,
+                      FUN = function(frame_from_list) sapply(search_cols, 
+                                                             FUN = function(search_col) 
+                                                               if(length(filter(frame_from_list,!is.na(!!as.symbol(search_col)))[,search_col])>2){
+                                                                 nrow(frame_from_list)}
+                      ))
+  
+  return(unlist(n_list))
+}
+
+
 #building the output frame
-percey_frame = function(cat,var,pval,mean_cat,mean_overall,split_col){
+percey_frame = function(n_category,cat,var,pval,mean_cat,mean_overall,split_col){
     ans = rep("",length(cat))
    
-    percey_dataframe <- cbind.data.frame(cat,var,ans,pval,mean_cat,mean_overall)
+    percey_dataframe <- cbind.data.frame(n_category,cat,var,ans,pval,mean_cat,mean_overall)
     percey_dataframe$dif = round((mean_cat - mean_overall)/mean_overall,3)+1
     percey_dataframe[,'mean_cat'] = percent(percey_dataframe[,'mean_cat'])
     percey_dataframe[,'mean_overall'] = percent(percey_dataframe[,'mean_overall'])  

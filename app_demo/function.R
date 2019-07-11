@@ -1,19 +1,22 @@
 
 
-masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, unique_outcomes, pvalue_thresh){
+masterframeFX = function(original_data, vars, target_var, min_leaf, unique_outcomes, pvalue_thresh){
+
+#Previous code from when "complexity threshold" was a checkbox  
+  # if(cpinput == TRUE){
+  #   cpinput = 0.01
+  # } else{
+  #   cpinput = -0.01
+  # }
   
-  if(cpinput == TRUE){
-    cpinput = 0.01
-  } else{
-    cpinput = -0.01
-  }
+cpinput = -0.01
   
   print(c("actual passed class",class(original_data[,target_var])))
   test_data = filter(original_data,!is.na((!!as.symbol(target_var))))
   
 
   #progress bar
-  withProgress(message = "Assessing all potential datacuts...", value = 0, {
+  withProgress(message = "Assessing all potential datacuts...", value = 20, max = 100, {
     
     if(!(class(test_data[,target_var]) %in% c("integer","numeric"))){
       ###CATEGORICAL###
@@ -210,6 +213,8 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
           j = j + numleafs
           
         }
+        incProgress(1/ncol(var_comb_frame))
+        Sys.sleep(0.01)
       }
       
       #removing duplicates and sorting by pvalue
@@ -227,12 +232,16 @@ masterframeFX = function(original_data, vars, target_var, min_leaf, cpinput, uni
 
 
 ####OUTPUTTING THE LIST OF DATAFRAMES FOR NUMERIC BOXPLOT OUTPUT####
-masterframe_nodecuts = function(original_data, vars, target_var, min_leaf, cpinput, unique_outcomes, pvalue_thresh){
-  if(cpinput == TRUE){
-    cpinput = 0.01
-  } else{
-    cpinput = -0.01
-  }
+masterframe_nodecuts = function(original_data, vars, target_var, min_leaf, unique_outcomes, pvalue_thresh){
+
+#from when specifying cpinput
+    # if(cpinput == TRUE){
+  #   cpinput = 0.01
+  # } else{
+  #   cpinput = -0.01
+  # }
+  
+cpinput = -0.01
     
   test_data = filter(original_data,!is.na((!!as.symbol(target_var))))
   
