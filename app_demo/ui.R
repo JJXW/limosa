@@ -1,5 +1,5 @@
 header <- dashboardHeader(
-  title = 'FolsomAnalyics Beta'
+  title = 'FolsomAnalyics Pilot'
 )
 
 sidebar <- dashboardSidebar(
@@ -64,7 +64,7 @@ body <- dashboardBody(
             wellPanel(fluidRow(
               column(3,
                      numericInput("min_leaf",
-                                  "Minimum Numer of Observations in a Model",
+                                  "Minimum Number of Observations in a Model",
                                   value = 30
                                   )
               ),
@@ -73,12 +73,12 @@ body <- dashboardBody(
                                   "Advanced Parameter: Max pvalue to include",
                                   value = 0.5,step = 0.01
                      )
-              ),
-              column(3,
-                    checkboxInput("cpchoice","Advanced Parameter: Check to apply Complexity Threshold",
-                                  value = FALSE))
-            )
-          ),
+              )
+            #   column(3,
+            #         checkboxInput("cpchoice","Advanced Parameter: Check to apply Complexity Threshold",
+            #                       value = FALSE))
+            # )
+          )),
           fluidRow(
             column(2,actionButton("UseTheseVars_tree", "Choose These Variables & Run"))
           ),
@@ -89,30 +89,27 @@ body <- dashboardBody(
           ,
           fluidRow(
             downloadButton("report", "Download Table"),
-            downloadButton("mainchart", "Download Chart")
+            downloadButton("mainchart", "Download Plot")
           )
           
     ),
  tabItem("help",
          fluidRow(titlePanel("Information and Contact")),
           br(),
-         h4(strong("Beta Software Product")),
-         "This is Folsom Analytics, Inc.'s Beta Product aimed to help non-technical users leverage data science techniques to improve the way they harness information from data.",
+         h4(strong("Pilot Software Product")),
+         "This is Folsom Analytics, Inc.'s Pilot Product aimed to help non-technical users leverage data science techniques to improve the way they harness information from data.",
         "Software is prerelease code and is not at the level of performance or compatibility of a final, generally available product offering. Software may not operate correctly and may be substantially modified prior to first commercial shipment, or withdrawn. Software is provided 'AS IS' without warranty of any kind. The entire risk arising out of the use or performance of Software remains with user",
         br(),
         br(),
-        h4(strong("Methodology")),
-        "Folsom Analytics' Prediction Finder leverages the machine learning technique of classification trees to produce relevant models for your consideration.",
-        "Pvalue is calculated using a chi-squared test for categorical target variables and a t-test for numeric target values.",
-        "For more assitance on methodology please contact us.",
+        h4(strong("Questions")),
+        "Please refer to the latest Pilot Handbook for basic instructions and a description of the statistics used in this tool. ",
+        "We want to build for your needs, so please contact us with any issues, bugs, questions you may encounter.",
         br(),
         br(),
         h4(strong("Contact")),
-        "Please reach out with feedback or if you encounter difficulties. We are excited to build our offering to add the most value possible to your company.",
+        "Carl Moos and Jonathan Wang",
         br(),
-        "Carl Moos: carlmoos@mit.edu",
-        br(),
-         "Jonathan Wang: jonathan352@gmail.com",
+         "carlmoos@mit.edu",
         br(),
          "Phone Number: 714-745-0455"
          ),

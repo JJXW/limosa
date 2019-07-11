@@ -24,13 +24,11 @@ server <- function(input, output, session) {
 #ATTEMPTING TO ALLOW CLASS MODIFICATION OF DATAFRAME
   output$sliders <- renderUI({
     class_of_cols <- sapply((1:length(colnames(original_data_form()))),FUN = function(i) class(original_data_form()[,i]))
-    print(class_of_cols)
-    
+
     class_of_cols <- sapply(class_of_cols,FUN = function(x) if(x %in% c("integer", "numeric")){"numeric"}
                             else if(x %in% c("Date")) {"date"}
       else{"categorical"}
       )
-    print(class_of_cols)
     lapply(1:length(colnames(original_data_form())), function(i) {
       selectInput(inputId = paste0("col_", i), label = paste(colnames(original_data_form())[i]),choices = c("numeric","categorical","date"),multiple = FALSE,
                   selected = class_of_cols[i]
@@ -118,14 +116,14 @@ server <- function(input, output, session) {
 
   #outputting the frame to populate the table and categorical chart
   tree_model <- eventReactive(input$UseTheseVars_tree, {
-    return(masterframeFX(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$min_leaf, input$cpchoice, unique_outcomes(), input$pvalue_thresh))
+    return(masterframeFX(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$min_leaf, unique_outcomes(), input$pvalue_thresh))
 
   })
   
 
   #outputting the dataset for each relevant node in the same order as the masterframe rows
   numeric_nodeframe <- eventReactive(input$UseTheseVars_tree, {
-        return(masterframe_nodecuts(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$min_leaf, input$cpchoice, unique_outcomes(), input$pvalue_thresh))
+        return(masterframe_nodecuts(survey_data_reactive(),input$tree_split_var,input$tree_target_var,input$min_leaf, unique_outcomes(), input$pvalue_thresh))
 
   })
 
@@ -134,15 +132,16 @@ server <- function(input, output, session) {
 
     #creating the output table
     out_table = tree_model()
-    print(out_table)
     out_table$model = 1:nrow(out_table)
     
     #allowing the right column name for numeric average (it was outputting oddly)
     if(!(class(survey_data_reactive()[,input$tree_target_var]) %in% c("integer","numeric"))){
       out_table = cbind(out_table[,c('model','n','rule','pvalue')],out_table[,str_detect(colnames(out_table),"avg_")])
+      colnames(out_table)[1:3] = c("Model","N","Insight")
       
     } else{
       out_table = cbind(out_table[,c('model','n','rule','pvalue')],Subset_Mean = out_table[,'yval'],Overall_Mean = out_table[,str_detect(colnames(out_table),"avg_")],Difference = out_table[,'Dif_Score'])
+      colnames(out_table)[1:3] = c("Model","N","Insight")
       
     }
     if(nrow(out_table)==1){
@@ -164,7 +163,7 @@ server <- function(input, output, session) {
   #download this table
   output$report = downloadHandler(
     filename = function() {
-      paste("Prediction Finder Report"," [",Sys.time(),"].csv")
+      paste("Prediction Finder Report"," ",Sys.time(),".csv")
     },
     content = function(file){
       write.csv(out_table(), file)
@@ -174,7 +173,7 @@ server <- function(input, output, session) {
   #download the plotly that is outputted below
   output$mainchart = downloadHandler(
     filename = function() {
-      paste("Prediction Finder Report"," [",Sys.time(),"].png")
+      paste("Prediction Finder Report"," ",Sys.time(),".png")
     },
     content = function(file){
       export(plot_1(), file=file)
@@ -275,10 +274,7 @@ server <- function(input, output, session) {
     }
     
     
-  #this commented out code was to allow us to render a png in the final downloadable pdf however I could not figure
-  #out how to have Rmarkdown search the correct file path when this saves the image in the working directory
-  # orca(p, "temp.png")
-    
+
     return(p)
     
   })
@@ -351,6 +347,8 @@ if(input$weighted_avg == FALSE){
   numstep7 = numbey_frame(numstep6a, numbof_numeric,numstep5,numstep6,numstep2,numstep3,numstep4,split)
   
   setProgress(value = 40)
+  
+
 
 #running categorical
   mlml_cat = fulldata_categorical(numbof_categorical,survey_data_reactive(), split, search_categorical)
@@ -396,34 +394,30 @@ if(input$weighted_avg == FALSE){
       splitframes = add_totalcol(splitframes,search)
       overall_data = add_totalcol_fulldata(survey_data_reactive(),search)
       setProgress(value = 10)
-      print("1")
-      
+
       #Converting into percents
       splitframes = percent_transform(splitframes,search)
       overall_data = percent_transform_fulldata(overall_data,search)
       setProgress(value = 25)
-      print("2")
-      
+
       perc_pvals = p_value_creation(overall_data,splitframes,search)
       Sys.sleep(1)
       setProgress(value = 50)
       
-      print("3")
-      
+
       perc_groupmeans = group_means_percent(splitframes,search)
       perc_overallmeans = overall_means_percent(overall_data,splitframes,search)
       Sys.sleep(1)
       setProgress(value = 80)
       
-      print("4")
-      
+
       category_labels = num_category_split_percent(overall_data,splitframes,split,search)
       setProgress(value = 90)
       question_labels = num_question_list_percent(overall_data,splitframes,split,search)
-      print("5")
-
+      n_per_question = n_list_weighted(overall_data,splitframes,split,search)
+      print(n_per_question)
       
-      final = percey_frame(category_labels,question_labels,perc_pvals,perc_groupmeans,perc_overallmeans,split)
+      final = percey_frame(n_per_question,category_labels,question_labels,perc_pvals,perc_groupmeans,perc_overallmeans,split)
       
     })#end progress bar for weighted average piece
 }
@@ -434,7 +428,6 @@ if(input$weighted_avg == FALSE){
  
 #filtering and completing the table
   final = filter(final,pval<=input$pvalue_diffy)
-  print(final)
   final = final[,c('n_category','cat','var','ans','rule','pval','mean_cat','mean_overall','dif')]
   final = final[order(final$cat,final$var,final$pval),]
   colnames(final) = c("N","Split_Value", "Question","Response","Insight","P-Value","Subset_Mean","Overall_Mean","Difference")
@@ -460,7 +453,7 @@ diffytree <- reactive({
 
 output$report_diffy = downloadHandler(
   filename = function() {
-    paste("Difference Finder Report"," [",Sys.time(),"].csv")
+    paste("Difference Finder Report"," ",Sys.time(),".csv")
   },
   content = function(file){
     write.csv(diffytree(), file)
