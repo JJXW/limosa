@@ -16,7 +16,7 @@ cpinput = -0.01
   
 
   #progress bar
-  withProgress(message = "Assessing all potential datacuts...", value = 20, max = 100, {
+  withProgress(message = "Assessing all potential datacuts...", value = 40, max = 100, {
     
     if(!(class(test_data[,target_var]) %in% c("integer","numeric"))){
       ###CATEGORICAL###

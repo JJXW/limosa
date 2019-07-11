@@ -280,8 +280,9 @@ server <- function(input, output, session) {
   })
   
   output$tree_plot <- renderPlotly({
-   plot_1()
-
+    withProgress(message = "Rendering plot...", value = 60, max = 100,{
+    plot_1()
+    })
   })
 
 
