@@ -31,4 +31,4 @@ options(stringsAsFactors = F)
 
 source('function.R')
 source('function2.R')
-source('function3.R')
+source('function_weightedavg.R')

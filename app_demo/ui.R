@@ -7,7 +7,7 @@ sidebar <- dashboardSidebar(
     menuItem("Data Upload & Summary", tabName = "dashboard"),
     menuItem("Prediction Finder", tabName = "tree"),
     menuItem("Difference Finder", tabName = "diffy"),
-    # menuItem("Cohort Analysis", tabName = 'cohort'),
+    menuItem("Cohort Analysis", tabName = 'cohort'),
     menuItem("Info & Contact", tabName = "help")
     
   )
@@ -64,13 +64,13 @@ body <- dashboardBody(
             wellPanel(fluidRow(
               column(3,
                      numericInput("min_leaf",
-                                  "Minimum Number of Observations in a Model",
+                                  "Minimum N Per Model",
                                   value = 30
                                   )
               ),
               column(3,
                      numericInput("pvalue_thresh",
-                                  "Advanced Parameter: Max pvalue to include",
+                                  "Max Pvalue to Include",
                                   value = 0.5,step = 0.01
                      )
               )
@@ -135,7 +135,7 @@ body <- dashboardBody(
            )),
            fluidRow(
              column(3, numericInput("pvalue_diffy",
-                          "Advanced Parameter: Max pvalue to include",
+                          "Max Pvalue to Include",
                           value = 0.5,step = 0.01
              )),
              column(3,
