@@ -507,15 +507,107 @@ cohort_data <- eventReactive(input$UseTheseVars_cohort, {
   
   })
 
+cohort_count_data <- eventReactive(input$UseTheseVars_cohort, {
+  
+  data <- survey_data_reactive()
+  
+  data_subset <- data[, c(input$cohort_id, input$cohort_time)]
+  
+  data_subset_names <- names(data_subset)
+  
+  names(data_subset) <- c('cohort_id', 'time_var')
+  
+  if(input$cohort_time_group == 'day'){
+    data_subset <- data_subset %>% 
+      mutate(cohort_time_group = as.Date(time_var, format = '%m/%d/%y')) %>%
+      group_by(cohort_time_group) %>%
+      dplyr::summarize(count = n_distinct(cohort_id))
+
+
+  } else if(input$cohort_time_group == 'month'){
+    data_subset <- data_subset %>% 
+      mutate(cohort_time_group = floor_date(as.Date(time_var, format = '%m/%d/%y'), 
+                                            unit = 'months')) %>%
+      group_by(cohort_time_group) %>%
+      dplyr::summarize(count = n_distinct(cohort_id))
+    
+  }
+  
+  cohort_count_data <- data_subset
+  
+  return(cohort_count_data)
+  
+  
+})
+
+cohort_retention_data <- eventReactive(input$UseTheseVars_cohort, {
+  
+  data <- survey_data_reactive()
+  
+  data_subset <- data[, c(input$cohort_id, input$cohort_time)]
+  
+  data_subset_names <- names(data_subset)
+  
+  names(data_subset) <- c('cohort_id', 'time_var')
+  
+  if(input$cohort_time_group == 'day'){
+    data_subset <- data_subset %>% 
+      mutate(cohort_time_group = as.Date(time_var, format = '%m/%d/%y'))
+    group_min <- data_subset %>%
+      dplyr::group_by(cohort_id) %>%
+      dplyr::summarize(group_time_min = min(cohort_time_group))
+    
+    data_subset <- data_subset %>%
+      dplyr::left_join(group_min)
+    
+    data_subset <- data_subset %>% 
+      mutate(date_diff = as.numeric(cohort_time_group - group_time_min))
+    
+  } else if(input$cohort_time_group == 'month'){
+    data_subset <- data_subset %>% 
+      mutate(cohort_time_group = floor_date(as.Date(time_var, format = '%m/%d/%y'), unit = 'months'))
+    
+    group_min <- data_subset %>%
+      dplyr::group_by(cohort_id) %>%
+      dplyr::summarize(group_time_min = min(cohort_time_group))
+    
+    data_subset <- data_subset %>%
+      dplyr::left_join(group_min)
+    
+    data_subset <- data_subset %>%
+      mutate(date_diff = interval(ymd(group_time_min),ymd(cohort_time_group)) %/% months(1))
+  }
+  
+  base_count <- data_subset %>%
+    filter(date_diff==0) %>%
+    group_by(cohort_time_group) %>%
+    summarise(base_count = n_distinct(cohort_id, na.rm=T))
+  
+  cohort_retention_data <- data_subset %>%
+    dplyr::group_by(date_diff, cohort_time_group) %>%
+    dplyr::summarise(count = n_distinct(cohort_id, na.rm=T)) %>%
+    dplyr::left_join(base_count) %>%
+    mutate(pct = count / base_count)
+  
+  
+  return(cohort_retention_data)
+  
+  
+})
+
+
 output$cohort_plot <- renderPlotly({
   
   data <- cohort_data()
 
   p <- ggplot(data, 
-              aes(x=date_diff, y=cohort_target, group=cohort_time_group)) + 
-    geom_line() + 
-    scale_fill_brewer(palette = "Paired") + ## TODO: colors are broken when there's 9+ groups
-    theme_minimal(base_size = 16) 
+              aes(x=date_diff, y=cohort_target)) + 
+    geom_area(aes(fill = as.character(cohort_time_group)), position='identity') + 
+    scale_fill_brewer(palette = "Paired") + 
+    theme_minimal(base_size = 16) +
+    xlab("Time From") +
+    ylab("Value") +
+    labs(fill="Cohort Time Group")
     
   
   p <- ggplotly(p) %>% layout(autosize = T)
@@ -523,5 +615,43 @@ output$cohort_plot <- renderPlotly({
   
 })
 
+
+output$cohort_count_plot <- renderPlotly({
+  
+  data <- cohort_count_data()
+  
+  p <- ggplot(data, 
+              aes(x=cohort_time_group, y=count)) + 
+    geom_line() + 
+    scale_fill_brewer(palette = "Paired") + 
+    theme_minimal(base_size = 16) +
+    xlab("Date") +
+    ylab("Customer Count") +
+    labs(fill="Cohort Time Group")
+  
+  
+  p <- ggplotly(p) %>% layout(autosize = T)
+  
+  
+})
+
+output$cohort_retention_plot <- renderPlotly({
+  
+  data <- cohort_retention_data()
+  
+  p <- ggplot(data, 
+              aes(x=date_diff, y=pct, group=cohort_time_group)) + 
+    geom_line() + 
+    scale_fill_brewer(palette = "Paired") + 
+    theme_minimal(base_size = 16) +
+    xlab("Time From") +
+    ylab("Customer Percent Retained") +
+    labs(fill="Cohort Time Group")
+  
+  
+  p <- ggplotly(p) %>% layout(autosize = T)
+  
+  
+})
 
 }#close server block
