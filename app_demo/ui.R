@@ -7,7 +7,7 @@ sidebar <- dashboardSidebar(
     menuItem("Data Upload & Summary", tabName = "dashboard"),
     menuItem("Prediction Finder", tabName = "tree"),
     menuItem("Difference Finder", tabName = "diffy"),
-    # menuItem("Cohort Analysis", tabName = 'cohort'),
+    menuItem("Cohort Analysis", tabName = 'cohort'),
     menuItem("Info & Contact", tabName = "help")
     
   )
@@ -191,7 +191,11 @@ body <- dashboardBody(
            column(2,actionButton("UseTheseVars_cohort", "Choose These Variables & Run"))
          ),
          br(),
-         fluidRow(plotlyOutput("cohort_plot"))
+         fluidRow(plotlyOutput("cohort_plot")),
+         br(),
+         fluidRow(plotlyOutput("cohort_count_plot")),
+         br(),
+         fluidRow(plotlyOutput("cohort_retention_plot"))
          )
 )
 )
