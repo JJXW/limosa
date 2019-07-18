@@ -292,12 +292,13 @@ server <- function(input, output, session) {
 observe({values <- colnames(survey_data_reactive())
 
 #MAKING SURE VARIABLES UPDATE ACROSS SELECTION VARIABLES#
-#automatic segmentation
+#automatic splitting
 updateSelectInput(session,"diff_split_var",label = "Split The Data By...",choices = c('',values))
 updateSelectInput(session,"diff_range_vars",label = "Search For Trends Over...",choices = c('',values))
 
+#COHORT INPUT UPDATES
 updateSelectInput(session, "cohort_time", choices=c('',values))
-updateSelectInput(session, "cohort_group", choices=c('',values))
+# updateSelectInput(session, "cohort_group", choices=c('',values))
 updateSelectInput(session, "cohort_target", choices=c('',values))
 updateSelectInput(session, "cohort_id", choices=c('',values))
 })
@@ -416,8 +417,7 @@ if(input$weighted_avg == FALSE){
       setProgress(value = 90)
       question_labels = num_question_list_percent(overall_data,splitframes,split,search)
       n_per_question = n_list_weighted(overall_data,splitframes,split,search)
-      print(n_per_question)
-      
+
       final = percey_frame(n_per_question,category_labels,question_labels,perc_pvals,perc_groupmeans,perc_overallmeans,split)
       
     })#end progress bar for weighted average piece
@@ -465,11 +465,11 @@ cohort_data <- eventReactive(input$UseTheseVars_cohort, {
   
   data <- survey_data_reactive()
   
-  data_subset <- data[, c(input$cohort_id, input$cohort_time, input$cohort_group, input$cohort_target)]
+  data_subset <- data[, c(input$cohort_id, input$cohort_time, input$cohort_target)]
   
   data_subset_names <- names(data_subset)
   
-  names(data_subset) <- c('cohort_id', 'time_var', 'cohort_group', 'cohort_target')
+  names(data_subset) <- c('cohort_id', 'time_var', 'cohort_target')
   
   if(input$cohort_time_group == 'day'){
     data_subset <- data_subset %>% 
@@ -479,14 +479,14 @@ cohort_data <- eventReactive(input$UseTheseVars_cohort, {
       dplyr::summarize(group_time_min = min(cohort_time_group))
     
     data_subset <- data_subset %>%
-      dplyr::left_join(group_min)
+        dplyr::left_join(group_min)
     
     data_subset <- data_subset %>% 
       mutate(date_diff = as.numeric(cohort_time_group - group_time_min))
       
   } else if(input$cohort_time_group == 'month'){
     data_subset <- data_subset %>% 
-      mutate(cohort_time_group = floor_date(as.Date(time_var, format = '%m/%d/%y'), unit = 'months'))
+      mutate(cohort_time_group = floor_date(as.Date(time_var, format = '%m/%d/%y'), unit = 'month'))
     
     group_min <- data_subset %>%
       dplyr::group_by(cohort_id) %>%
@@ -499,10 +499,23 @@ cohort_data <- eventReactive(input$UseTheseVars_cohort, {
       mutate(date_diff = interval(ymd(group_time_min),ymd(cohort_time_group)) %/% months(1))
   }
   
-  cohort_data <- data_subset %>%
-    dplyr::group_by(date_diff, cohort_time_group) %>%
-    dplyr::summarise(cohort_target = sum(as.numeric(cohort_target), na.rm=T))
+  #printing to see what happened to the data
 
+  
+  cohort_data <- data_subset %>%
+    dplyr::group_by(group_time_min, cohort_time_group) %>% #removed the grouping by date_diff variable for now
+    dplyr::summarise(cohort_target = sum(as.numeric(cohort_target), na.rm=T)) 
+print(cohort_data)
+  
+
+###adding more cohort data modifications
+  casted_cohort = dcast(cohort_data,group_time_min ~ cohort_time_group)
+  casted_cohort[,2:ncol(casted_cohort)][is.na(casted_cohort[,2:ncol(casted_cohort)])] = 0
+
+  casted_cohort =  casted_cohort[,!(names(casted_cohort)=="NA")]
+
+  cohort_data = melt(casted_cohort,id = 'group_time_min')
+  colnames(cohort_data) = c('group_time_min','cohort_time_group','cohort_target')
   return(cohort_data)
   
   })
@@ -574,22 +587,40 @@ cohort_retention_data <- eventReactive(input$UseTheseVars_cohort, {
     data_subset <- data_subset %>%
       dplyr::left_join(group_min)
     
+  
+    
+    ##modifiying to create "0" values for all dates so chart makes sense --- #N33D JON'S HELP HERE
+    # casted_cohort = dcast(data_subset,group_time_min ~ cohort_time_group)
+    # casted_cohort[,2:ncol(casted_cohort)][is.na(casted_cohort[,2:ncol(casted_cohort)])] = 0
+    # 
+    # casted_cohort =  casted_cohort[,!(names(casted_cohort)=="NA")]
+    # 
+    # cohort_data = melt(casted_cohort,id = 'group_time_min')
+    # colnames(cohort_data) = c('group_time_min','cohort_time_group','cohort_target')
+    # ####
+    # data_subset <- cohort_data
+    
     data_subset <- data_subset %>%
       mutate(date_diff = interval(ymd(group_time_min),ymd(cohort_time_group)) %/% months(1))
   }
   
+  #WILL NEED TO ADD IN THE ZEROS FOR MONTHS AND CAST+MELT LIKE I DID IN THE COHORT PIECE TO GET CLEAN SET OF DATA
   base_count <- data_subset %>%
-    filter(date_diff==0) %>%
-    group_by(cohort_time_group) %>%
+    # filter(date_diff==0) %>%
+    group_by(group_time_min) %>%
     summarise(base_count = n_distinct(cohort_id, na.rm=T))
+  print(base_count)
+  print("2")
   
   cohort_retention_data <- data_subset %>%
-    dplyr::group_by(date_diff, cohort_time_group) %>%
+    dplyr::group_by(group_time_min, cohort_time_group) %>%
     dplyr::summarise(count = n_distinct(cohort_id, na.rm=T)) %>%
     dplyr::left_join(base_count) %>%
-    mutate(pct = count / base_count)
+    mutate(pct = count / base_count) %>%
+    mutate(date_diff = interval(ymd(group_time_min),ymd(cohort_time_group)) %/% months(1))
   
-  
+  print(cohort_retention_data)
+  print("3")
   return(cohort_retention_data)
   
   
@@ -599,21 +630,25 @@ cohort_retention_data <- eventReactive(input$UseTheseVars_cohort, {
 output$cohort_plot <- renderPlotly({
   
   data <- cohort_data()
-
-  p <- ggplot(data, 
-              aes(x=date_diff, y=cohort_target)) + 
-    geom_area(aes(fill = as.character(cohort_time_group)), position='identity') + 
-    scale_fill_brewer(palette = "Paired") + 
+  
+  
+  p <- ggplot(data,
+              aes(x=cohort_time_group, y=cohort_target, group = as.character(group_time_min))) +
+    geom_area(aes(fill = as.character(group_time_min))) +
+    scale_fill_brewer(palette = "Paired") +
     theme_minimal(base_size = 16) +
-    xlab("Time From") +
+    xlab("Date") +
     ylab("Value") +
     labs(fill="Cohort Time Group")
-    
-  
+
+
   p <- ggplotly(p) %>% layout(autosize = T)
   
   
 })
+
+
+
 
 
 output$cohort_count_plot <- renderPlotly({
@@ -640,11 +675,11 @@ output$cohort_retention_plot <- renderPlotly({
   data <- cohort_retention_data()
   
   p <- ggplot(data, 
-              aes(x=date_diff, y=pct, group=cohort_time_group)) + 
-    geom_line() + 
+              aes(x=date_diff, y=pct, group=as.character(group_time_min), colour = as.character(group_time_min))) + 
+    geom_line(aes(fill = as.character(group_time_min))) + 
     scale_fill_brewer(palette = "Paired") + 
     theme_minimal(base_size = 16) +
-    xlab("Time From") +
+    xlab("Time Period") +
     ylab("Customer Percent Retained") +
     labs(fill="Cohort Time Group")
   
