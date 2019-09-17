@@ -65,13 +65,13 @@ body <- dashboardBody(
               column(3,
                      numericInput("min_leaf",
                                   "Minimum N Per Model",
-                                  value = 30
+                                  value = 150
                                   )
               ),
               column(3,
                      numericInput("pvalue_thresh",
                                   "Max Pvalue to Include",
-                                  value = 0.5,step = 0.01
+                                  value = 0.05,step = 0.01
                      )
               )
             #   column(3,

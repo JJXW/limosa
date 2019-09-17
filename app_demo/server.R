@@ -9,7 +9,7 @@ server <- function(input, output, session) {
 
       if(!is.null(input$file1)) {
         dataFile <- input$file1
-        survey_data <- read.csv(dataFile$datapath,na.strings = c(""," ","NA"),header = TRUE, stringsAsFactors = FALSE)
+        survey_data <- read.csv(dataFile$datapath,na.strings = c(""," ","NA"),header = TRUE, stringsAsFactors = FALSE, fileEncoding = "latin1")
       } else{
         survey_data <- as.data.frame(matrix(ncol=1,nrow=1,"No Data Uploaded"))
       }
@@ -43,7 +43,7 @@ server <- function(input, output, session) {
    classes_updated <- sapply((1:length(colnames(original_data_form()))),FUN = function(i) input[[paste("col_",i,sep = "")]])
 
    dataFile <- input$file1
-   survey_data <- read.csv(dataFile$datapath,na.strings = c(""," ","NA"),header = TRUE, stringsAsFactors = FALSE, as.is = TRUE)
+   survey_data <- read.csv(dataFile$datapath,na.strings = c(""," ","NA"),header = TRUE, stringsAsFactors = FALSE, as.is = TRUE, fileEncoding = "latin1")
 
 
    for(i in 1:length(colnames(original_data_form()))){
